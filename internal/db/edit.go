@@ -60,15 +60,6 @@ func Create(path string) {
 		"NOTE"		TEXT
 	);`
 	exec(path, sqlStatement)
-
-	sqlStatement = `CREATE INDEX IF NOT EXISTS idx_workouts_user_date ON workouts(USER_ID, DATE);`
-	exec(path, sqlStatement)
-
-	sqlStatement = `CREATE INDEX IF NOT EXISTS idx_sets_workout ON sets(WORKOUT_ID);`
-	exec(path, sqlStatement)
-
-	sqlStatement = `CREATE INDEX IF NOT EXISTS idx_weight_user ON weight(USER_ID);`
-	exec(path, sqlStatement)
 }
 
 // InsertEx - insert one exercise into DB

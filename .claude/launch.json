@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "exercisediary",
+      "runtimeExecutable": "docker",
+      "runtimeArgs": ["start", "-a", "exercisediary-mu-test"],
+      "port": 8851
+    }
+  ]
+}
