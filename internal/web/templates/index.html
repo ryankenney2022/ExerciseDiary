@@ -110,9 +110,18 @@
           <p>Weight (default): {{ .Weight }}</p>
           <p>Reps (default): {{ .Reps }}</p>
         </div>
+        {{ if .Image }}
         <div class="col">
           <img src="{{ .Image }}" style="max-width: 100%;max-height: 100%;" alt="Exercise Image"></img>
         </div>
+        {{ end }}
+        {{ with ytEmbed .VideoURL }}
+        <div class="col mt-2">
+          <div class="ratio ratio-16x9">
+            <iframe src="{{ . }}" title="Exercise video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          </div>
+        </div>
+        {{ end }}
       </div>
     </div>
   </div>
@@ -158,12 +167,17 @@
                 <div class="card-body">
                 <form action="/set/" method="post" name="sets">
                   <input name="date" type="hidden" id="formDate">
+                  <div class="mb-3">
+                    <input name="workout_name" type="text" class="form-control mb-2" id="workoutName" placeholder="Workout name (optional, e.g. Push Day)" value="{{ .TodayWorkout.Name }}">
+                    <textarea name="workout_note" rows="2" class="form-control" id="workoutNote" placeholder="Workout notes (how it felt, what to remember next time)">{{ .TodayWorkout.Note }}</textarea>
+                  </div>
                   <div class="table-responsive">
-                    <table class="table table-borderless">
+                    <table class="table table-borderless align-middle">
                       <thead>
-                          <th class="col-5">Name</th>
-                          <th class="col-3">Weight</th>
-                          <th class="col-3">Reps</th>
+                          <th class="col-4">Name</th>
+                          <th class="col-2">Weight</th>
+                          <th class="col-2">Reps</th>
+                          <th class="col-3">Note</th>
                           <th class="col-1"></th>
                       </thead>
                       <tbody id="todayEx"></tbody>

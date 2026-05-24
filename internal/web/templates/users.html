@@ -1,0 +1,71 @@
+{{ define "users.html" }}
+
+<body>
+<div class="container-lg mt-4">
+  <div class="row">
+    <div class="col-md-6 mb-4">
+      <div class="card border-primary">
+        <div class="card-header">Users</div>
+        <div class="card-body">
+          {{ if .Users }}
+          <table class="table table-borderless align-middle">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th class="text-center">Color</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {{ range .Users }}
+              <tr>
+                <td>
+                  {{ .Name }}
+                  {{ if eq .ID $.CurrentUser.ID }}<span class="badge bg-primary ms-2">current</span>{{ end }}
+                </td>
+                <td class="text-center">
+                  <span style="display:inline-block;width:1.4em;height:1.4em;border-radius:50%;background-color: {{ .Color }};border:1px solid #888"></span>
+                </td>
+                <td class="text-end">
+                  <form action="/userdel/" method="post" onsubmit="return confirm('Delete user {{ .Name }}? Only works if they have no workouts or weight history.');" class="d-inline">
+                    <input type="hidden" name="id" value="{{ .ID }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete (only if no history)">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              {{ end }}
+            </tbody>
+          </table>
+          {{ else }}
+          <p class="text-muted mb-0">No users yet. Add one below.</p>
+          {{ end }}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+      <div class="card border-primary">
+        <div class="card-header">Add user</div>
+        <div class="card-body">
+          <form action="/users/" method="post">
+            <div class="mb-3">
+              <label class="form-label">Name</label>
+              <input name="name" type="text" class="form-control" required maxlength="40">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Color</label>
+              <input name="color" type="color" class="form-control form-control-color" value="#0d6efd">
+              <div class="form-text">Used for heatmap and accents (future). Pick anything.</div>
+            </div>
+            <button type="submit" class="btn btn-primary">Add</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{ template "footer.html" }}
+{{ end }}

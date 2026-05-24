@@ -1,7 +1,6 @@
 package web
 
 import (
-	// "log"
 	"net/http"
 	"strconv"
 
@@ -13,37 +12,63 @@ import (
 )
 
 func setHandler(c *gin.Context) {
-
-	var formData []models.Set
-	var oneSet models.Set
-	var reps int
-	var weight decimal.Decimal
+	user := currentUser(c)
+	if user.ID == 0 {
+		c.Redirect(http.StatusFound, "/users/")
+		return
+	}
 
 	_ = c.PostFormMap("sets")
-
 	formMap := c.Request.PostForm
-	// log.Println("MAP:", formMap)
 
-	len := len(formMap["name"])
-	// log.Println("LEN:", len)
-	date := formMap["date"][0]
+	dates := formMap["date"]
+	if len(dates) == 0 || dates[0] == "" {
+		c.Redirect(http.StatusFound, "/")
+		return
+	}
+	date := dates[0]
 
-	for i := 0; i < len; i++ {
+	workout := db.GetOrCreateTodayWorkout(appConfig.DBPath, user.ID, date)
+
+	workoutName := firstOr(formMap["workout_name"], "")
+	workoutNote := firstOr(formMap["workout_note"], "")
+	db.UpdateWorkoutMeta(appConfig.DBPath, workout.ID, workoutName, workoutNote)
+
+	db.BulkDeleteSetsByUserDate(appConfig.DBPath, user.ID, date)
+
+	names := formMap["name"]
+	weights := formMap["weight"]
+	reps := formMap["reps"]
+	notes := formMap["note"]
+
+	var oneSet models.Set
+	var formData []models.Set
+	for i := 0; i < len(names); i++ {
+		oneSet = models.Set{}
+		oneSet.WorkoutID = workout.ID
 		oneSet.Date = date
-		oneSet.Name = formMap["name"][i]
-		weight, _ = decimal.NewFromString(formMap["weight"][i])
-		reps, _ = strconv.Atoi(formMap["reps"][i])
-		oneSet.Weight = weight
-		oneSet.Reps = reps
-
+		oneSet.Name = names[i]
+		if i < len(weights) {
+			oneSet.Weight, _ = decimal.NewFromString(weights[i])
+		}
+		if i < len(reps) {
+			oneSet.Reps, _ = strconv.Atoi(reps[i])
+		}
+		if i < len(notes) {
+			oneSet.Note = notes[i]
+		}
 		formData = append(formData, oneSet)
 	}
 
-	db.BulkDeleteSetsByDate(appConfig.DBPath, date)
 	db.BulkAddSets(appConfig.DBPath, formData)
-	exData.Sets = db.SelectSet(appConfig.DBPath)
-
-	// log.Println("FORM DATA:", formData)
+	exData.Sets = db.SelectSetsByUser(appConfig.DBPath, user.ID)
 
 	c.Redirect(http.StatusFound, "/")
+}
+
+func firstOr(vals []string, fallback string) string {
+	if len(vals) == 0 {
+		return fallback
+	}
+	return vals[0]
 }

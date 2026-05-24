@@ -31,6 +31,10 @@
                     <td><input name="image" type="text" class="form-control" value="{{ .OneEx.Image }}"></td>
                 </tr>
                 <tr>
+                    <td>YouTube link</td>
+                    <td><input name="video_url" type="text" class="form-control" placeholder="https://youtu.be/... or full watch URL" value="{{ .OneEx.VideoURL }}"></td>
+                </tr>
+                <tr>
                     <td>Weight (default)</td>
                     <td><input name="weight" type="number" step="any" min="0" class="form-control" value="{{ .OneEx.Weight }}"></td>
                 </tr>
@@ -53,12 +57,24 @@
         </div>
         </div>
         <div class="col-md">
-            <div class="card border-primary">
+            {{ if .OneEx.Image }}
+            <div class="card border-primary mb-3">
                 <div class="card-header">Image</div>
                 <div class="card-body">
                     <img src="{{ .OneEx.Image }}" style="max-width: 100%;max-height: 100%;"></img>
                 </div>
             </div>
+            {{ end }}
+            {{ with ytEmbed .OneEx.VideoURL }}
+            <div class="card border-primary">
+                <div class="card-header">Video</div>
+                <div class="card-body">
+                    <div class="ratio ratio-16x9">
+                        <iframe src="{{ . }}" title="Exercise video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                </div>
+            </div>
+            {{ end }}
         </div>
     </div>
     </div>

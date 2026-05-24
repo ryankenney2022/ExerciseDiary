@@ -56,6 +56,28 @@
               </li>
               {{ end }}
             </ul>
+            <ul class="navbar-nav ms-auto mb-2 mb-sm-0">
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle active" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class="bi bi-person-circle"></i>
+                  {{ if .CurrentUser.ID }}{{ .CurrentUser.Name }}{{ else }}No user{{ end }}
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                  {{ range .Users }}
+                  <li>
+                    <form action="/user/switch" method="post" class="m-0">
+                      <input type="hidden" name="id" value="{{ .ID }}">
+                      <button type="submit" class="dropdown-item {{ if eq .ID $.CurrentUser.ID }}fw-bold{{ end }}">
+                        {{ .Name }}
+                      </button>
+                    </form>
+                  </li>
+                  {{ end }}
+                  {{ if .Users }}<li><hr class="dropdown-divider"></li>{{ end }}
+                  <li><a class="dropdown-item" href="/users/">Manage users</a></li>
+                </ul>
+              </li>
+            </ul>
           </div>
         </div>
       </nav>

@@ -1,17 +1,31 @@
 var id = 0;
 var today = null;
 
-function addExercise(name, weight, reps) {
-    // console.log('NAME =', name);
+function escapeHTMLAttr(s) {
+    if (s === undefined || s === null) return "";
+    return String(s)
+        .replaceAll("&", "&amp;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+}
 
+function addExercise(name, weight, reps, note) {
     id = id + 1;
-    html_to_insert=`<tr id="${id}">
+    const safeName = escapeHTMLAttr(name);
+    const safeWeight = escapeHTMLAttr(weight);
+    const safeReps = escapeHTMLAttr(reps);
+    const safeNote = escapeHTMLAttr(note);
+
+    const html_to_insert = `<tr id="${id}">
     <td>
-        <input name="name" type="text" class="form-control" value="${name}">
+        <input name="name" type="text" class="form-control" value="${safeName}">
     </td><td>
-        <input name="weight" type="number" step="any" min="0" class="form-control" value="${weight}">
+        <input name="weight" type="number" step="any" min="0" class="form-control" value="${safeWeight}">
     </td><td>
-        <input name="reps" type="number" min="0" class="form-control" value="${reps}">
+        <input name="reps" type="number" min="0" class="form-control" value="${safeReps}">
+    </td><td>
+        <input name="note" type="text" class="form-control" placeholder="(optional)" value="${safeNote}">
     </td><td>
         <button class="btn del-set-button" type="button" title="Delete" onclick="delExercise(${id})">
             <i class="bi bi-x-square"></i>
@@ -31,7 +45,7 @@ function setFormContent(sets, date) {
         let len = sets.length;
         for (let i = 0 ; i < len; i++) {
             if (sets[i].Date == date) {
-                addExercise(sets[i].Name, sets[i].Weight, sets[i].Reps);
+                addExercise(sets[i].Name, sets[i].Weight, sets[i].Reps, sets[i].Note);
             }
         }
     }
@@ -71,21 +85,15 @@ function moveDayLeftRight(where, sets) {
     date.setDate(date.getDate() + parseInt(where));
     let left = date.toLocaleDateString('en-CA');
 
-    // console.log('LEFT =', left);
-
     setFormContent(sets, left);
 };
 
 function addAllGroup(exs, gr) {
-
-    // console.log('GR =', gr);
-    // console.log('SETS =', exs);
-
     if (exs) {
         let len = exs.length;
         for (let i = 0 ; i < len; i++) {
             if (exs[i].Group == gr) {
-                addExercise(exs[i].Name, exs[i].Weight, exs[i].Reps);
+                addExercise(exs[i].Name, exs[i].Weight, exs[i].Reps, "");
             }
         }
     }

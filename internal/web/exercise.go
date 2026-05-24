@@ -1,8 +1,8 @@
 package web
 
 import (
-	// "log"
 	"net/http"
+	"regexp"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -21,9 +21,10 @@ func exerciseHandler(c *gin.Context) {
 	guiData.Config = appConfig
 	guiData.ExData = exData
 	guiData.GroupMap = createGroupMap()
+	guiData.Users = allUsers(c)
+	guiData.CurrentUser = currentUser(c)
 
 	idStr, ok := c.GetQuery("id")
-	// log.Println("ID =", idStr)
 
 	if ok && (idStr != "new") {
 		id, _ = strconv.Atoi(idStr)
@@ -48,6 +49,7 @@ func saveExerciseHandler(c *gin.Context) {
 	oneEx.Name = c.PostForm("name")
 	oneEx.Descr = c.PostForm("descr")
 	oneEx.Image = c.PostForm("image")
+	oneEx.VideoURL = c.PostForm("video_url")
 
 	id := c.PostForm("id")
 	weight := c.PostForm("weight")
@@ -56,8 +58,6 @@ func saveExerciseHandler(c *gin.Context) {
 	oneEx.ID, _ = strconv.Atoi(id)
 	oneEx.Weight, _ = decimal.NewFromString(weight)
 	oneEx.Reps, _ = strconv.Atoi(reps)
-
-	// log.Println("ONEEX =", oneEx)
 
 	if oneEx.ID != 0 {
 		db.DeleteEx(appConfig.DBPath, oneEx.ID)
@@ -78,4 +78,19 @@ func deleteExerciseHandler(c *gin.Context) {
 	exData.Exs = db.SelectEx(appConfig.DBPath)
 
 	c.Redirect(http.StatusFound, "/")
+}
+
+var ytIDRe = regexp.MustCompile(`(?:youtube\.com/(?:watch\?v=|embed/|shorts/)|youtu\.be/)([A-Za-z0-9_-]{6,})`)
+
+// YouTubeEmbed converts a YouTube watch / short / share URL to the embed form.
+// Returns "" if the input doesn't look like a YouTube URL.
+func YouTubeEmbed(raw string) string {
+	if raw == "" {
+		return ""
+	}
+	m := ytIDRe.FindStringSubmatch(raw)
+	if len(m) < 2 {
+		return ""
+	}
+	return "https://www.youtube.com/embed/" + m[1]
 }

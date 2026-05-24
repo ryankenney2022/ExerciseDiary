@@ -31,6 +31,8 @@ func Gui(dirPath, nodePath string) {
 	log.Println("INFO: starting web gui with config", appConfig.ConfPath)
 
 	db.Create(appConfig.DBPath)
+	db.EnsureSchema(appConfig.DBPath)
+	db.MigrateMultiUser(appConfig.DBPath)
 
 	address := appConfig.Host + ":" + appConfig.Port
 
@@ -41,7 +43,10 @@ func Gui(dirPath, nodePath string) {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 
-	templ := template.Must(template.New("").ParseFS(templFS, "templates/*"))
+	funcMap := template.FuncMap{
+		"ytEmbed": YouTubeEmbed,
+	}
+	templ := template.Must(template.New("").Funcs(funcMap).ParseFS(templFS, "templates/*"))
 	router.SetHTMLTemplate(templ) // templates
 
 	router.StaticFS("/fs/", http.FS(pubFS)) // public
@@ -49,11 +54,14 @@ func Gui(dirPath, nodePath string) {
 	router.GET("/login/", loginHandler)  // login.go
 	router.POST("/login/", loginHandler) // login.go
 
+	router.Use(userMiddleware()) // middleware_user.go
+
 	router.GET("/", auth.Auth(&authConf), indexHandler)             // index.go
 	router.GET("/config/", auth.Auth(&authConf), configHandler)     // config.go
 	router.GET("/exercise/", auth.Auth(&authConf), exerciseHandler) // exercise.go
 	router.GET("/stats/", auth.Auth(&authConf), statsHandler)       // stats.go
 	router.GET("/weight/", auth.Auth(&authConf), weightHandler)     // weight.go
+	router.GET("/users/", auth.Auth(&authConf), usersHandler)       // users.go
 
 	router.POST("/config/", auth.Auth(&authConf), saveConfigHandler)     // config.go
 	router.POST("/config/auth", auth.Auth(&authConf), saveConfigAuth)    // config.go
@@ -61,6 +69,9 @@ func Gui(dirPath, nodePath string) {
 	router.POST("/exdel/", auth.Auth(&authConf), deleteExerciseHandler)  // exercise.go
 	router.POST("/set/", auth.Auth(&authConf), setHandler)               // set.go
 	router.POST("/weight/", auth.Auth(&authConf), addWeightHandler)      // weight.go
+	router.POST("/users/", auth.Auth(&authConf), saveUserHandler)        // users.go
+	router.POST("/userdel/", auth.Auth(&authConf), deleteUserHandler)    // users.go
+	router.POST("/user/switch", switchUserHandler)                       // middleware_user.go
 
 	err := router.Run(address)
 	check.IfError(err)

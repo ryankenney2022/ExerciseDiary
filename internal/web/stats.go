@@ -14,8 +14,16 @@ import (
 func statsHandler(c *gin.Context) {
 	var guiData models.GuiData
 
-	guiData.ExData.Sets = db.SelectSet(appConfig.DBPath)
+	user := currentUser(c)
+	if user.ID == 0 {
+		c.Redirect(http.StatusFound, "/users/")
+		return
+	}
+
+	guiData.ExData.Sets = db.SelectSetsByUser(appConfig.DBPath, user.ID)
 	guiData.Config = appConfig
+	guiData.Users = allUsers(c)
+	guiData.CurrentUser = user
 
 	guiData.GroupMap = make(map[string]string)
 

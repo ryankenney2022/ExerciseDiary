@@ -18,6 +18,8 @@ func configHandler(c *gin.Context) {
 
 	guiData.Config = appConfig
 	guiData.Auth = authConf
+	guiData.Users = allUsers(c)
+	guiData.CurrentUser = currentUser(c)
 
 	guiData.Themes = []string{"cerulean", "cosmo", "cyborg", "darkly", "emerald", "flatly", "grass", "grayscale", "journal", "litera", "lumen", "lux", "materia", "minty", "morph", "ocean", "pulse", "quartz", "sand", "sandstone", "simplex", "sketchy", "slate", "solar", "spacelab", "superhero", "united", "vapor", "wood", "yeti", "zephyr"}
 

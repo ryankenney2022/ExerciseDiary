@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -14,14 +15,23 @@ import (
 func indexHandler(c *gin.Context) {
 	var guiData models.GuiData
 
+	user := currentUser(c)
+	if user.ID == 0 {
+		c.Redirect(http.StatusFound, "/users/")
+		return
+	}
+
 	exData.Exs = db.SelectEx(appConfig.DBPath)
-	exData.Sets = db.SelectSet(appConfig.DBPath)
-	exData.Weight = db.SelectW(appConfig.DBPath)
+	exData.Sets = db.SelectSetsByUser(appConfig.DBPath, user.ID)
+	exData.Weight = db.SelectWeightByUser(appConfig.DBPath, user.ID)
 
 	guiData.Config = appConfig
 	guiData.ExData = exData
 	guiData.GroupMap = createGroupMap()
 	guiData.HeatMap = generateHeatMap()
+	guiData.Users = allUsers(c)
+	guiData.CurrentUser = user
+	guiData.TodayWorkout = db.GetWorkoutByUserDate(appConfig.DBPath, user.ID, time.Now().Format("2006-01-02"))
 
 	// Sort exercises by Place
 	sort.Slice(guiData.ExData.Exs, func(i, j int) bool {
