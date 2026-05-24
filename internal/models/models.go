@@ -4,6 +4,7 @@ import (
 	"github.com/shopspring/decimal"
 
 	"github.com/aceberg/ExerciseDiary/internal/auth"
+	"github.com/aceberg/ExerciseDiary/internal/prt"
 )
 
 // Conf - web gui config
@@ -137,4 +138,5 @@ type GuiData struct {
 	PRTTests     []PRTTest
 	OnePRT       PRTTest
 	LastPRT      PRTTest // most recent test for the current user (for index summary card)
+	ScoreSheet   *prt.Sheet // standards table for current user's bracket (nil if unknown)
 }

@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -27,10 +28,16 @@ func prtListHandler(c *gin.Context) {
 	guiData.Users = allUsers(c)
 	guiData.CurrentUser = user
 	guiData.PRTTests = db.SelectPRTByUser(appConfig.DBPath, user.ID)
+	if user.Sex != "" && user.DOB != "" {
+		age := prt.AgeOnDate(user.DOB, today())
+		guiData.ScoreSheet = prt.SheetFor(user.Sex, age, user.Altitude)
+	}
 
 	c.HTML(http.StatusOK, "header.html", guiData)
 	c.HTML(http.StatusOK, "prt_list.html", guiData)
 }
+
+func today() string { return time.Now().Format("2006-01-02") }
 
 // prtFormHandler - GET /prt/new or /prt/edit/:id
 func prtFormHandler(c *gin.Context) {

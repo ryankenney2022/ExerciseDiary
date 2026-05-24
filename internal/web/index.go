@@ -10,6 +10,7 @@ import (
 
 	"github.com/aceberg/ExerciseDiary/internal/db"
 	"github.com/aceberg/ExerciseDiary/internal/models"
+	"github.com/aceberg/ExerciseDiary/internal/prt"
 )
 
 func indexHandler(c *gin.Context) {
@@ -33,6 +34,10 @@ func indexHandler(c *gin.Context) {
 	guiData.CurrentUser = user
 	guiData.TodayWorkout = db.GetWorkoutByUserDate(appConfig.DBPath, user.ID, time.Now().Format("2006-01-02"))
 	guiData.LastPRT = db.GetLastPRTByUser(appConfig.DBPath, user.ID)
+	if user.Sex != "" && user.DOB != "" {
+		age := prt.AgeOnDate(user.DOB, time.Now().Format("2006-01-02"))
+		guiData.ScoreSheet = prt.SheetFor(user.Sex, age, user.Altitude)
+	}
 
 	// Sort exercises by Place
 	sort.Slice(guiData.ExData.Exs, func(i, j int) bool {

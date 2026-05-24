@@ -219,3 +219,73 @@ func FormatMMSS(secs int) string {
 	}
 	return fmt.Sprintf("%d:%02d", secs/60, secs%60)
 }
+
+// SheetRow represents one score row across all three events for a single
+// (sex, age-bracket, altitude). Used to render the full standards table to
+// the user as a reference.
+type SheetRow struct {
+	Score        int
+	Category     string
+	Level        string
+	Pushups      int // 0 if no qualifying row at this score
+	PlankSeconds int // 0 if no qualifying row
+	RunSeconds   int // 0 if no qualifying row
+}
+
+// Sheet is the joined standards table for the user's bracket.
+type Sheet struct {
+	Sex      string
+	AgeMin   int
+	AgeMax   int
+	Altitude string
+	Rows     []SheetRow // ordered highest score first
+}
+
+// SheetFor returns the joined standards table for a (sex, age, altitude).
+// Returns nil if the bracket can't be resolved.
+func SheetFor(sex string, age int, altitude string) *Sheet {
+	pu := findTable(sex, age, altitude, EventPushups)
+	pl := findTable(sex, age, altitude, EventPlank)
+	rn := findTable(sex, age, altitude, EventRun)
+	if pu == nil || pl == nil || rn == nil {
+		return nil
+	}
+
+	byScore := map[int]*SheetRow{}
+	addRow := func(r tableRow, fill func(*SheetRow)) {
+		row, ok := byScore[r.Score]
+		if !ok {
+			row = &SheetRow{
+				Score:    r.Score,
+				Category: strings.TrimSpace(r.Category),
+				Level:    strings.TrimSpace(r.Level),
+			}
+			byScore[r.Score] = row
+		}
+		fill(row)
+	}
+
+	for _, r := range pu.Rows {
+		addRow(r, func(sr *SheetRow) { sr.Pushups = r.Raw })
+	}
+	for _, r := range pl.Rows {
+		addRow(r, func(sr *SheetRow) { sr.PlankSeconds = r.Raw })
+	}
+	for _, r := range rn.Rows {
+		addRow(r, func(sr *SheetRow) { sr.RunSeconds = r.Raw })
+	}
+
+	sheet := &Sheet{
+		Sex:      pu.Sex,
+		AgeMin:   pu.AgeMin,
+		AgeMax:   pu.AgeMax,
+		Altitude: pu.Altitude,
+	}
+	// Emit in descending score order
+	for s := 100; s >= 0; s-- {
+		if row, ok := byScore[s]; ok {
+			sheet.Rows = append(sheet.Rows, *row)
+		}
+	}
+	return sheet
+}

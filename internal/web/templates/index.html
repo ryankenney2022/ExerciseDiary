@@ -70,9 +70,10 @@
       </div>
     </div>
   </div>
-  {{ if .LastPRT.ID }}
+  {{ if or .LastPRT.ID .ScoreSheet }}
   <div class="row">
     <div class="col-md-6 mb-4">
+      {{ if .LastPRT.ID }}
       <div class="card border-primary">
         <div class="card-header d-flex justify-content-between">
           <span>Last PRT — {{ .LastPRT.Date }}</span>
@@ -109,6 +110,8 @@
           </div>
         </div>
       </div>
+      {{ end }}
+      {{ template "score_sheet.html" . }}
     </div>
   </div>
   {{ end }}

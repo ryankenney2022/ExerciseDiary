@@ -77,6 +77,8 @@
   {{ else }}
   <p class="text-muted">No PRT tests logged yet.</p>
   {{ end }}
+
+  {{ template "score_sheet.html" . }}
 </div>
 
 {{ template "footer.html" }}
