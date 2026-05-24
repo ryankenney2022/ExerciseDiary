@@ -103,6 +103,15 @@ func InsertW(path string, ex models.BodyWeight) {
 	exec(path, sqlStatement)
 }
 
+// UpdateW - update an existing weight row's date and weight value
+func UpdateW(path string, ex models.BodyWeight) {
+
+	sqlStatement := `UPDATE weight SET DATE = '%s', WEIGHT = '%v' WHERE ID = '%d';`
+	sqlStatement = fmt.Sprintf(sqlStatement, ex.Date, ex.Weight, ex.ID)
+
+	exec(path, sqlStatement)
+}
+
 // DeleteEx - delete one exercise
 func DeleteEx(path string, id int) {
 

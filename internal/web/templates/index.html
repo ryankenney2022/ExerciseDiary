@@ -51,10 +51,16 @@
         </div>
       </div>
     </div>
-    <div class="col-md-4 mb-4">
+    <div class="col-md-4 mb-4" id="weightCardCol">
       <div class="card border-primary">
-        <div class="card-body" style="overflow-x: scroll;">
-          <div class="d-flex justify-content-evenly">
+        <div class="card-header d-flex justify-content-between align-items-center py-1">
+          <span class="small text-muted">Weight</span>
+          <button type="button" class="btn btn-sm del-set-button p-1" title="Hide weight" onclick="hideWeightCard()">
+            <i class="bi bi-eye-slash"></i>
+          </button>
+        </div>
+        <div class="card-body" style="overflow-x: auto;">
+          <div class="d-flex justify-content-evenly align-items-center">
             <div class="col-md-8">
               <div class="chart-container" style="max-width: fit-content">
                 <canvas id="weight-chart" style="max-height: 100px;"></canvas>
@@ -62,12 +68,17 @@
             </div>
             <div class="col-md-2">
               <button class="btn del-set-button" title="Add weight" data-bs-toggle="modal" data-bs-target="#mWeight" onclick='setWeightDate()'>
-                <h4><i class="bi bi-window-plus"></i></h4>
+                <h4 class="mb-0"><i class="bi bi-window-plus"></i></h4>
               </button>
             </div>
           </div>
         </div>
       </div>
+    </div>
+    <div class="col-md-4 mb-4 d-none" id="weightShowCol">
+      <button type="button" class="btn btn-sm btn-outline-secondary" onclick="showWeightCard()">
+        <i class="bi bi-eye"></i> Show weight
+      </button>
     </div>
   </div>
   {{ if or .LastPRT.ID .ScoreSheet }}
@@ -131,12 +142,12 @@
                         <div class="col-md-11">
                         {{ range $.ExData.Exs }}
                         {{ if eq .Group $gr }}
-                        <div class="hstack gap-2">
-                            <a href="/exercise/?id={{ .ID }}"><button class="btn del-set-button" title="Edit">
+                        <div class="hstack gap-2 align-items-center mb-1">
+                            <a href="/exercise/?id={{ .ID }}" class="d-inline-flex"><button type="button" class="btn del-set-button px-2" title="Edit">
                               <i class="bi bi-pencil-square"></i>
                             </button></a>
                             <!-- Button trigger modal -->
-                            <button class="btn add-exercise-button" title="Show details" data-bs-toggle="modal" data-bs-target="#modal{{ .ID }}">
+                            <button type="button" class="btn del-set-button px-2" title="Show details" data-bs-toggle="modal" data-bs-target="#modal{{ .ID }}">
                               <i class="bi bi-window-desktop"></i>
                             </button>
 <!-- Modal -->
@@ -172,8 +183,8 @@
   </div>
 </div>
 <!-- End Modal -->
-                            <button class="btn exercise-button" onclick='addExercise("{{ .Name }}", "{{ .Weight }}", "{{ .Reps }}")' title="Weight: {{ .Weight }}; Reps: {{ .Reps }};">{{ .Name }}</button>
-                            <button class="btn add-exercise-button" onclick='addExercise("{{ .Name }}", "{{ .Weight }}", "{{ .Reps }}")' title="Add">
+                            <button type="button" class="btn exercise-button flex-grow-1 text-start" onclick='addExercise("{{ .Name }}", "{{ .Weight }}", "{{ .Reps }}")' title="Weight: {{ .Weight }}; Reps: {{ .Reps }};">{{ .Name }}</button>
+                            <button type="button" class="btn del-set-button px-2" onclick='addExercise("{{ .Name }}", "{{ .Weight }}", "{{ .Reps }}")' title="Add">
                                 <i class="bi bi-arrow-right-square"></i>
                             </button>
                         </div>
@@ -217,13 +228,13 @@
                     <textarea name="workout_note" rows="2" class="form-control" id="workoutNote" placeholder="Workout notes (how it felt, what to remember next time)">{{ .TodayWorkout.Note }}</textarea>
                   </div>
                   <div class="table-responsive">
-                    <table class="table table-borderless align-middle">
+                    <table class="table table-borderless align-middle table-todayex">
                       <thead>
-                          <th class="col-4">Name</th>
-                          <th class="col-2">Weight</th>
-                          <th class="col-2">Reps</th>
-                          <th class="col-3">Note</th>
-                          <th class="col-1"></th>
+                          <th class="todayex-name">Name</th>
+                          <th class="todayex-weight">Weight</th>
+                          <th class="todayex-reps">Reps</th>
+                          <th class="todayex-note d-none d-md-table-cell">Note</th>
+                          <th class="todayex-del"></th>
                       </thead>
                       <tbody id="todayEx"></tbody>
                     </table>

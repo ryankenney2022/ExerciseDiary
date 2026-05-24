@@ -24,8 +24,21 @@ func addWeightHandler(c *gin.Context) {
 	w.UserID = user.ID
 	w.Date = c.PostForm("date")
 	weightStr := c.PostForm("weight")
-
 	w.Weight, _ = decimal.NewFromString(weightStr)
+
+	// If an id is present on the form, treat as edit.
+	if idStr := c.PostForm("id"); idStr != "" {
+		if id, err := strconv.Atoi(idStr); err == nil && id > 0 {
+			w.ID = id
+			db.UpdateW(appConfig.DBPath, w)
+			back := "/"
+			if ref := c.Request.Header.Get("Referer"); ref != "" {
+				back = ref
+			}
+			c.Redirect(http.StatusFound, back)
+			return
+		}
+	}
 
 	db.InsertW(appConfig.DBPath, w)
 

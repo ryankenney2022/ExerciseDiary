@@ -17,16 +17,18 @@ function addExercise(name, weight, reps, note) {
     const safeReps = escapeHTMLAttr(reps);
     const safeNote = escapeHTMLAttr(note);
 
+    // Note column is hidden below md breakpoint, but we still need an input
+    // in the form so the value posts. A hidden input rides along on mobile.
     const html_to_insert = `<tr id="${id}">
-    <td>
-        <input name="name" type="text" class="form-control" value="${safeName}">
-    </td><td>
+    <td class="todayex-name">
+        <input name="name" type="text" class="form-control todayex-name-input" value="${safeName}">
+    </td><td class="todayex-weight">
         <input name="weight" type="number" step="any" min="0" class="form-control" value="${safeWeight}">
-    </td><td>
+    </td><td class="todayex-reps">
         <input name="reps" type="number" min="0" class="form-control" value="${safeReps}">
-    </td><td>
+    </td><td class="todayex-note d-none d-md-table-cell">
         <input name="note" type="text" class="form-control" placeholder="(optional)" value="${safeNote}">
-    </td><td>
+    </td><td class="todayex-del">
         <button class="btn del-set-button" type="button" title="Delete" onclick="delExercise(${id})">
             <i class="bi bi-x-square"></i>
         </button>
@@ -34,6 +36,26 @@ function addExercise(name, weight, reps, note) {
 
     document.getElementById('todayEx').insertAdjacentHTML('beforeend', html_to_insert);
 };
+
+// Weight card visibility (persisted in localStorage)
+function hideWeightCard() {
+    document.getElementById('weightCardCol').classList.add('d-none');
+    document.getElementById('weightShowCol').classList.remove('d-none');
+    try { localStorage.setItem('hideWeightCard', '1'); } catch (e) {}
+}
+function showWeightCard() {
+    document.getElementById('weightCardCol').classList.remove('d-none');
+    document.getElementById('weightShowCol').classList.add('d-none');
+    try { localStorage.removeItem('hideWeightCard'); } catch (e) {}
+}
+(function() {
+    try {
+        if (localStorage.getItem('hideWeightCard') === '1') {
+            // Defer so the DOM elements exist
+            document.addEventListener('DOMContentLoaded', hideWeightCard);
+        }
+    } catch (e) {}
+})();
 
 function setFormContent(sets, date) {
     window.sessionStorage.setItem("today", date);

@@ -24,3 +24,21 @@
         overflow-x: scroll;
     }
 }
+
+/* Today's-sets table column sizing.
+   On mobile (Note column hidden): Name 50%, Weight 22%, Reps 22%, Del 6%.
+   On md+ (Note visible):          Name 38%, Weight 18%, Reps 18%, Note 20%, Del 6%.
+   This keeps the exercise name readable instead of being squeezed. */
+.table-todayex .todayex-name   { width: 50%; }
+.table-todayex .todayex-weight { width: 22%; }
+.table-todayex .todayex-reps   { width: 22%; }
+.table-todayex .todayex-del    { width:  6%; }
+@media (min-width: 768px) {
+    .table-todayex .todayex-name   { width: 38%; }
+    .table-todayex .todayex-weight { width: 18%; }
+    .table-todayex .todayex-reps   { width: 18%; }
+    .table-todayex .todayex-note   { width: 20%; }
+    .table-todayex .todayex-del    { width:  6%; }
+}
+/* Make the Name input use the full column so long exercise names don't truncate. */
+.table-todayex .todayex-name-input { min-width: 0; }
