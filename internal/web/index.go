@@ -39,6 +39,8 @@ func indexHandler(c *gin.Context) {
 		guiData.ScoreSheet = prt.SheetFor(user.Sex, age, user.Altitude)
 	}
 
+	guiData.LastDone = lastDoneByName(exData.Sets)
+
 	// Sort exercises by Place
 	sort.Slice(guiData.ExData.Exs, func(i, j int) bool {
 		return guiData.ExData.Exs[i].Place < guiData.ExData.Exs[j].Place
@@ -51,6 +53,22 @@ func indexHandler(c *gin.Context) {
 
 	c.HTML(http.StatusOK, "header.html", guiData)
 	c.HTML(http.StatusOK, "index.html", guiData)
+}
+
+// lastDoneByName scans user-scoped sets and returns the most recent DATE for
+// each exercise name. Empty map if there are no sets. Used to label exercises
+// on the home accordion with when the user last did them.
+func lastDoneByName(sets []models.Set) map[string]string {
+	out := map[string]string{}
+	for _, s := range sets {
+		if s.Date == "" || s.Name == "" {
+			continue
+		}
+		if cur, ok := out[s.Name]; !ok || s.Date > cur {
+			out[s.Name] = s.Date
+		}
+	}
+	return out
 }
 
 func createGroupMap() map[string]string {

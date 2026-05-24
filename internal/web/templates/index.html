@@ -183,7 +183,10 @@
   </div>
 </div>
 <!-- End Modal -->
-                            <button type="button" class="btn exercise-button flex-grow-1 text-start" onclick='addExercise("{{ .Name }}", "{{ .Weight }}", "{{ .Reps }}")' title="Weight: {{ .Weight }}; Reps: {{ .Reps }};">{{ .Name }}</button>
+                            <button type="button" class="btn exercise-button flex-grow-1 text-start d-flex justify-content-between align-items-center" onclick='addExercise("{{ .Name }}", "{{ .Weight }}", "{{ .Reps }}")' title="Weight: {{ .Weight }}; Reps: {{ .Reps }};">
+                              <span class="text-truncate">{{ .Name }}</span>
+                              {{ with index $.LastDone .Name }}<small class="text-muted ms-2 text-nowrap">{{ . }}</small>{{ end }}
+                            </button>
                             <button type="button" class="btn del-set-button px-2" onclick='addExercise("{{ .Name }}", "{{ .Weight }}", "{{ .Reps }}")' title="Add">
                                 <i class="bi bi-arrow-right-square"></i>
                             </button>

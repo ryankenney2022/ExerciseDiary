@@ -141,4 +141,5 @@ type GuiData struct {
 	ScoreSheet   *prt.Sheet // standards table for current user's bracket (nil if unknown)
 	ExGroups     []string // distinct, sorted group names across all exercises
 	ExPlaces     []string // distinct, sorted "place in group" values across all exercises
+	LastDone     map[string]string // exercise name -> most recent DATE the current user logged it
 }
