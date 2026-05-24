@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Parse the pdftotext -layout output of the Navy PRT Guide-5A into structured JSON.
+"""Parse Guide-5A PRT score tables into a structured JSON the Go app embeds.
+
+Uses pdfplumber's table extraction, which preserves the visual row/column
+layout — unlike pdftotext -layout which scrambles tables that have header
+rows spanning multiple printed rows.
 
 Output schema (one object per (sex, age_bracket, altitude, event)):
 {
@@ -17,32 +21,28 @@ For plank/run: raw is seconds (mm:ss converted).
 
 import json
 import re
-import sys
 from pathlib import Path
 
-TXT = Path(__file__).parent / "Guide-5A_PRT.txt"
-OUT = Path(__file__).parent / "score_tables.json"
+import pdfplumber
 
-AGE_RE = re.compile(r"(Males|Females): Age (\d+)\s*-\s*(\d+)|(Males|Females): Age (\d+)\s*\+", re.IGNORECASE)
+HERE = Path(__file__).parent
+PDF = HERE / "Guide-5A_PRT.pdf"
+OUT = HERE / "score_tables.json"
 
-CATEGORIES = [
-    ("Outstanding", "High"),
-    ("Outstanding", "Medium"),
-    ("Outstanding", "Low"),
-    ("Excellent", "High"),
-    ("Excellent", "Medium"),
-    ("Excellent", "Low"),
-    ("Good", "High"),
-    ("Good", "Medium"),
-    ("Good", "Low"),
-    ("Satisfactory", "High"),
-    ("Satisfactory", "Medium"),
-    ("Probationary", ""),
-]
+# Pages in the PDF (1-indexed). Tables for the low-altitude section live on
+# pages 21-32; high-altitude tables live on pages 33-44. We just iterate every
+# page in the document and let the table-header text tell us which bracket
+# we're looking at — that's more robust than pinning page numbers.
+SEX_AGE_RE = re.compile(
+    r"(Males|Females):\s*Age\s*(\d+)\s*(?:-\s*(\d+)|(\+))", re.IGNORECASE
+)
+
+ALT_LOW_MARKER = "Altitudes Less Than"
+ALT_HIGH_MARKER = "Altitudes Greater Than"
 
 
-def mmss_to_seconds(s: str) -> int:
-    s = s.strip()
+def mmss_to_seconds(s: str) -> int | None:
+    s = (s or "").strip()
     if not s:
         return None
     m = re.match(r"^(\d+):(\d{2})$", s)
@@ -51,194 +51,150 @@ def mmss_to_seconds(s: str) -> int:
     return int(m.group(1)) * 60 + int(m.group(2))
 
 
-def parse_table_block(lines: list[str]) -> dict:
-    """Given the lines for one (sex × age) block, parse out per-event score rows.
+def int_or_none(s: str) -> int | None:
+    s = (s or "").strip()
+    if not s:
+        return None
+    try:
+        return int(s)
+    except ValueError:
+        return None
 
-    Approach: walk the lines; track current category/level as it appears in the
-    leftmost columns. Each row has:
-      [Category] [Level] [Points] [Pushups] [Plank mm:ss] [1.5mi mm:ss] [2km row] [500yd swim] [450m swim]
-    Intermediate-points rows (e.g. 95, 85) only have Points + Pushups + (sometimes) 450m swim.
+
+def parse_one_subtable(rows: list[list[str]], sex_age_header: str) -> dict:
+    """Parse one (sex × age) sub-table from a pdfplumber-extracted page table.
+
+    rows is the slice of full-page rows belonging to one sex×age block,
+    starting with the header rows and ending before the next header (or
+    end of page).
+
+    Each data row has columns:
+      [Category, Level, Points, Push-ups, Plank, Run, Row, 500yd swim, 450m swim]
     """
-    rows_pushups = []  # [{score, category, level, raw}]
-    rows_plank = []
-    rows_run = []
+    # Identify sex
+    m = SEX_AGE_RE.search(sex_age_header)
+    if not m:
+        return None
+    sex = "M" if m.group(1).lower().startswith("m") else "F"
+    age_min = int(m.group(2))
+    age_max = int(m.group(3)) if m.group(3) else 999
 
-    cur_category = None
-    cur_level = None
+    pushups_rows = []
+    plank_rows = []
+    run_rows = []
 
-    # Strip well-known column-header words so the "Category Level 100 76 Planks run row swim 6:43"
-    # header line still yields parseable data (the 100-pts row data is embedded there).
-    HEADER_NOISE = re.compile(r"\b(Category|Level|Points|Push-\s*ups|Pushups|Forearm|Planks?|1\.5\s*-?\s*mile|2-?km|500\s*-?\s*yd|450\s*-?\s*m|row|swim|run|years)\b", re.IGNORECASE)
-
-    for line in lines:
-        if not line.strip():
+    for r in rows:
+        # Pad to expected width
+        cells = [(c or "").strip() for c in r]
+        if len(cells) < 6:
             continue
+        cat, level, points_s, pushups_s, plank_s, run_s = cells[:6]
 
-        # Try to identify a category-level row first
-        cat_match = None
-        for cat, level in CATEGORIES:
-            if level and re.match(rf"^\s*{cat}\s+{level}\b", line):
-                cat_match = (cat, level)
-                break
-            if not level and re.match(rf"^\s*{cat}\b", line):
-                cat_match = (cat, "")
-                break
-
-        body = line
-        if cat_match:
-            cur_category, cur_level = cat_match
-            pat = rf"^\s*{cur_category}\s+{cur_level}\s*" if cur_level else rf"^\s*{cur_category}\s*"
-            body = re.sub(pat, "", line, count=1)
-
-        # Scrub the column-header words so they don't get parsed as tokens.
-        body = HEADER_NOISE.sub(" ", body)
-
-        # Split remaining body into whitespace-separated tokens. Order *should* be:
-        #   [Points] [Pushups] [Plank] [Run] [Row] [500swim] [450swim]
-        # but intermediate-points rows lack most of these.
-        toks = body.split()
-
-        # Find a numeric token at the start that looks like Points (in {45,50,55,...,100})
-        points = None
-        if toks and re.match(r"^\d+$", toks[0]):
-            n = int(toks[0])
-            if n in {45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100}:
-                points = n
-                toks = toks[1:]
-
-        if points is None and not cat_match:
-            # Neither a category row nor an intermediate-points row — skip
+        # Skip header rows like ["Category", "Level", "", ...] or the title row
+        if cat.lower() == "category" or cat.lower() == "performance":
             continue
+        points = int_or_none(points_s)
+        if points is None:
+            continue
+        if cat == "" and level == "":
+            continue  # blank row
 
-        # Points-only rows that precede the first category label fall into Outstanding.
-        if points is not None and cur_category is None:
-            cur_category = "Outstanding"
-            cur_level = ""
+        # Probationary has no Level cell.
+        category = cat
+        lvl = level if level else ""
 
-        # For category rows without an explicit Points number, infer from category:
-        if points is None and cat_match:
-            cat_to_points = {
-                ("Outstanding", "High"): 90,
-                ("Outstanding", "Medium"): 80,
-                ("Outstanding", "Low"): 70,
-                ("Excellent", "High"): 60,
-                ("Excellent", "Medium"): 50,
-                ("Excellent", "Low"): 45,
-                ("Good", "High"): 40,
-                ("Good", "Medium"): 35,
-                ("Good", "Low"): 30,
-                ("Satisfactory", "High"): 25,
-                ("Satisfactory", "Medium"): 20,
-                ("Probationary", ""): 15,
-            }
-            points = cat_to_points.get((cur_category, cur_level))
-            if points is None:
-                continue
-
-        # Now interpret remaining tokens.
-        #  - integer (<200) → pushup count
-        #  - mm:ss tokens are ONLY plank/run on category-level rows (Outstanding High, etc.);
-        #    on intermediate-point rows (95, 85, ...), mm:ss values are always 450m swim — skip.
-        pushup_raw = None
-        plank_raw = None
-        run_raw = None
-
-        extract_mmss = cat_match is not None
-        mmss_idx = 0
-        for tok in toks:
-            if re.match(r"^\d+$", tok):
-                if pushup_raw is None and int(tok) < 200:
-                    pushup_raw = int(tok)
-            elif re.match(r"^\d+:\d{2}$", tok) and extract_mmss:
-                if mmss_idx == 0:
-                    plank_raw = mmss_to_seconds(tok)
-                elif mmss_idx == 1:
-                    run_raw = mmss_to_seconds(tok)
-                # idx 2+ would be row/swim — skip
-                mmss_idx += 1
-
-        if pushup_raw is not None:
-            rows_pushups.append({
-                "score": points,
-                "category": cur_category or "",
-                "level": cur_level or "",
-                "raw": pushup_raw,
+        if (pu := int_or_none(pushups_s)) is not None:
+            pushups_rows.append({
+                "score": points, "category": category, "level": lvl, "raw": pu,
             })
-        if plank_raw is not None:
-            rows_plank.append({
-                "score": points,
-                "category": cur_category or "",
-                "level": cur_level or "",
-                "raw": plank_raw,
+        if (pl := mmss_to_seconds(plank_s)) is not None:
+            plank_rows.append({
+                "score": points, "category": category, "level": lvl, "raw": pl,
             })
-        if run_raw is not None:
-            rows_run.append({
-                "score": points,
-                "category": cur_category or "",
-                "level": cur_level or "",
-                "raw": run_raw,
+        if (rn := mmss_to_seconds(run_s)) is not None:
+            run_rows.append({
+                "score": points, "category": category, "level": lvl, "raw": rn,
             })
 
-    return {"pushups": rows_pushups, "plank": rows_plank, "run": rows_run}
+    return {
+        "sex": sex, "age_min": age_min, "age_max": age_max,
+        "events": {
+            "pushups": pushups_rows,
+            "plank": plank_rows,
+            "run": run_rows,
+        },
+    }
+
+
+def split_subtables(rows: list[list[str]]) -> list[tuple[str, list[list[str]]]]:
+    """A page may contain TWO sub-tables (Males then Females, same age bracket).
+    Split into a list of (header_text, sub_rows)."""
+    out = []
+    current_header = None
+    current_rows = []
+
+    for r in rows:
+        joined = " ".join((c or "") for c in r)
+        if SEX_AGE_RE.search(joined):
+            if current_header is not None:
+                out.append((current_header, current_rows))
+            current_header = joined
+            current_rows = []
+        elif current_header is not None:
+            current_rows.append(r)
+
+    if current_header is not None:
+        out.append((current_header, current_rows))
+    return out
 
 
 def main():
-    text = TXT.read_text(encoding="utf-8", errors="replace")
-    lines = text.splitlines()
+    out_records = []
+    current_altitude = None
 
-    # Find every "Males: Age X - Y" / "Females: Age X - Y" header line
-    headers = []  # [(line_no, sex, age_min, age_max)]
-    for i, line in enumerate(lines):
-        m = AGE_RE.search(line)
-        if not m:
-            continue
-        sex_a, age_min_a, age_max_a, sex_b, age_b = m.groups()
-        if sex_a:
-            sex = "M" if sex_a.lower().startswith("m") else "F"
-            age_min = int(age_min_a)
-            age_max = int(age_max_a)
-        else:
-            sex = "M" if sex_b.lower().startswith("m") else "F"
-            age_min = int(age_b)
-            age_max = 999
-        headers.append((i, sex, age_min, age_max))
+    with pdfplumber.open(PDF) as pdf:
+        for page in pdf.pages:
+            text = page.extract_text() or ""
+            if ALT_LOW_MARKER in text and not text.lower().startswith("section 4-2"):
+                # Update altitude based on first marker found on the page.
+                if ALT_HIGH_MARKER in text:
+                    # Both markers — high comes later in the document.
+                    current_altitude = "high" if current_altitude == "high" else "low"
+                else:
+                    current_altitude = "low"
+            elif ALT_HIGH_MARKER in text:
+                current_altitude = "high"
 
-    # Split: low-altitude tables come before "Section 4-2"; high-altitude tables come after.
-    # (TOC entries with "Greater Than 5000" appear earlier and must be skipped.)
-    alt_split_line = None
-    for i, line in enumerate(lines):
-        if "Section 4-2" in line:
-            alt_split_line = i
-            break
-    if alt_split_line is None:
-        print("ERROR: could not find 'Section 4-2' header", file=sys.stderr)
-        sys.exit(1)
+            if current_altitude is None:
+                continue
 
-    out = []
-    for idx, (line_no, sex, age_min, age_max) in enumerate(headers):
-        # Block goes from this header to the next header (or end of file)
-        next_line = headers[idx + 1][0] if idx + 1 < len(headers) else len(lines)
-        block = lines[line_no:next_line]
-        altitude = "high" if line_no > alt_split_line else "low"
-        parsed = parse_table_block(block)
-        for event in ("pushups", "plank", "run"):
-            out.append({
-                "sex": sex,
-                "age_min": age_min,
-                "age_max": age_max,
-                "altitude": altitude,
-                "event": event,
-                "rows": parsed[event],
-            })
+            tables = page.extract_tables() or []
+            for tbl in tables:
+                for header, sub in split_subtables(tbl):
+                    parsed = parse_one_subtable(sub, header)
+                    if not parsed:
+                        continue
+                    for event, rows in parsed["events"].items():
+                        if not rows:
+                            continue
+                        out_records.append({
+                            "sex": parsed["sex"],
+                            "age_min": parsed["age_min"],
+                            "age_max": parsed["age_max"],
+                            "altitude": current_altitude,
+                            "event": event,
+                            "rows": rows,
+                        })
 
-    OUT.write_text(json.dumps(out, indent=2))
-    print(f"Wrote {len(out)} tables to {OUT}")
-    # Sanity-print one table
-    for t in out:
-        if t["sex"] == "M" and t["age_min"] == 35 and t["altitude"] == "low" and t["event"] == "pushups":
-            print("\nSample (M 35-39 low altitude, pushups):")
+    OUT.write_text(json.dumps(out_records, indent=2))
+    print(f"Wrote {len(out_records)} (sex/age/altitude/event) tables to {OUT}")
+
+    # Sanity: dump the M 45-49 low altitude pushups table
+    for t in out_records:
+        if t["sex"] == "M" and t["age_min"] == 45 and t["altitude"] == "low" and t["event"] == "pushups":
+            print("\nM 45-49 low altitude pushups:")
             for r in t["rows"]:
-                print(f"  {r['score']} pts ({r['category']} {r['level']}): {r['raw']} reps")
+                print(f"  {r['score']:3d} pts ({r['category']} {r['level']}): {r['raw']} reps")
 
 
 if __name__ == "__main__":
