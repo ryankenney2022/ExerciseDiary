@@ -139,4 +139,6 @@ type GuiData struct {
 	OnePRT       PRTTest
 	LastPRT      PRTTest // most recent test for the current user (for index summary card)
 	ScoreSheet   *prt.Sheet // standards table for current user's bracket (nil if unknown)
+	ExGroups     []string // distinct, sorted group names across all exercises
+	ExPlaces     []string // distinct, sorted "place in group" values across all exercises
 }

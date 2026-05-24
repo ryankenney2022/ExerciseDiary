@@ -3,6 +3,7 @@ package web
 import (
 	"net/http"
 	"regexp"
+	"sort"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -23,6 +24,7 @@ func exerciseHandler(c *gin.Context) {
 	guiData.GroupMap = createGroupMap()
 	guiData.Users = allUsers(c)
 	guiData.CurrentUser = currentUser(c)
+	guiData.ExGroups, guiData.ExPlaces = collectGroupsAndPlaces(exData.Exs)
 
 	idStr, ok := c.GetQuery("id")
 
@@ -78,6 +80,39 @@ func deleteExerciseHandler(c *gin.Context) {
 	exData.Exs = db.SelectEx(appConfig.DBPath)
 
 	c.Redirect(http.StatusFound, "/")
+}
+
+// collectGroupsAndPlaces returns distinct, sorted lists of group names and
+// place-in-group values across the exercise library. Used to power the
+// datalist combo inputs on the exercise edit form.
+func collectGroupsAndPlaces(exs []models.Exercise) (groups, places []string) {
+	gset := map[string]struct{}{}
+	pset := map[string]struct{}{}
+	for _, e := range exs {
+		if e.Group != "" {
+			gset[e.Group] = struct{}{}
+		}
+		if e.Place != "" {
+			pset[e.Place] = struct{}{}
+		}
+	}
+	for g := range gset {
+		groups = append(groups, g)
+	}
+	for p := range pset {
+		places = append(places, p)
+	}
+	sort.Strings(groups)
+	// Sort places numerically when possible so "2" comes before "10".
+	sort.Slice(places, func(i, j int) bool {
+		a, aerr := strconv.Atoi(places[i])
+		b, berr := strconv.Atoi(places[j])
+		if aerr == nil && berr == nil {
+			return a < b
+		}
+		return places[i] < places[j]
+	})
+	return groups, places
 }
 
 var ytIDRe = regexp.MustCompile(`(?:youtube\.com/(?:watch\?v=|embed/|shorts/)|youtu\.be/)([A-Za-z0-9_-]{6,})`)
