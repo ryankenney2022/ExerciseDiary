@@ -86,19 +86,24 @@
             </div>
             <div>
               {{ with .LastPRT.OverallCategory }}
-              {{ $cls := "secondary" }}
-              {{ if eq . "Outstanding" }}{{ $cls = "success" }}{{ end }}
-              {{ if eq . "Excellent" }}{{ $cls = "primary" }}{{ end }}
-              {{ if eq . "Good" }}{{ $cls = "info" }}{{ end }}
-              {{ if eq . "Satisfactory" }}{{ $cls = "warning" }}{{ end }}
-              {{ if eq . "Probationary" }}{{ $cls = "warning" }}{{ end }}
-              {{ if eq . "Failure" }}{{ $cls = "danger" }}{{ end }}
-              <span class="badge bg-{{ $cls }} fs-6">{{ . }}</span>
+              <span class="badge bg-{{ prtCatClass . }} fs-6">{{ . }}</span>
               {{ end }}
-              <div class="small text-muted mt-2">
-                {{ if .LastPRT.Pushups }}P/U {{ .LastPRT.Pushups }} ({{ .LastPRT.PushupScore }}){{ end }}
-                {{ if .LastPRT.PlankSeconds }} · Plank {{ prtMMSS .LastPRT.PlankSeconds }} ({{ .LastPRT.PlankScore }}){{ end }}
-                {{ if .LastPRT.RunSeconds }} · Run {{ prtMMSS .LastPRT.RunSeconds }} ({{ .LastPRT.RunScore }}){{ end }}
+              <div class="small mt-2">
+                {{ if .LastPRT.Pushups }}
+                  <div>P/U {{ .LastPRT.Pushups }} <span class="text-muted">({{ .LastPRT.PushupScore }} pts)</span>
+                    {{ prtEventBadge .LastPRT.SexAtTest .LastPRT.AgeAtTest .LastPRT.AltitudeAtTest "pushups" .LastPRT.Pushups }}
+                  </div>
+                {{ end }}
+                {{ if .LastPRT.PlankSeconds }}
+                  <div>Plank {{ prtMMSS .LastPRT.PlankSeconds }} <span class="text-muted">({{ .LastPRT.PlankScore }} pts)</span>
+                    {{ prtEventBadge .LastPRT.SexAtTest .LastPRT.AgeAtTest .LastPRT.AltitudeAtTest "plank" .LastPRT.PlankSeconds }}
+                  </div>
+                {{ end }}
+                {{ if .LastPRT.RunSeconds }}
+                  <div>Run {{ prtMMSS .LastPRT.RunSeconds }} <span class="text-muted">({{ .LastPRT.RunScore }} pts)</span>
+                    {{ prtEventBadge .LastPRT.SexAtTest .LastPRT.AgeAtTest .LastPRT.AltitudeAtTest "run" .LastPRT.RunSeconds }}
+                  </div>
+                {{ end }}
               </div>
             </div>
           </div>

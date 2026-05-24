@@ -78,11 +78,43 @@
       <div class="card border-primary mt-3">
         <div class="card-header">Current scores</div>
         <div class="card-body">
-          <table class="table table-borderless table-sm mb-0">
-            <tr><th>Pushups</th><td>{{ if .OnePRT.Pushups }}{{ .OnePRT.Pushups }} = <strong>{{ .OnePRT.PushupScore }}</strong> pts{{ else }}—{{ end }}</td></tr>
-            <tr><th>Plank</th><td>{{ if .OnePRT.PlankSeconds }}{{ prtMMSS .OnePRT.PlankSeconds }} = <strong>{{ .OnePRT.PlankScore }}</strong> pts{{ else }}—{{ end }}</td></tr>
-            <tr><th>Run</th><td>{{ if .OnePRT.RunSeconds }}{{ prtMMSS .OnePRT.RunSeconds }} = <strong>{{ .OnePRT.RunScore }}</strong> pts{{ else }}—{{ end }}</td></tr>
-            <tr class="border-top"><th>Overall</th><td>{{ if .OnePRT.OverallScore }}<strong>{{ .OnePRT.OverallScore }}</strong> pts — {{ .OnePRT.OverallCategory }}{{ else }}—{{ end }}</td></tr>
+          <table class="table table-borderless table-sm mb-0 align-middle">
+            <tr>
+              <th>Pushups</th>
+              <td>
+                {{ if .OnePRT.Pushups }}
+                  {{ .OnePRT.Pushups }} = <strong>{{ .OnePRT.PushupScore }}</strong> pts
+                  {{ prtEventBadge .OnePRT.SexAtTest .OnePRT.AgeAtTest .OnePRT.AltitudeAtTest "pushups" .OnePRT.Pushups }}
+                {{ else }}—{{ end }}
+              </td>
+            </tr>
+            <tr>
+              <th>Plank</th>
+              <td>
+                {{ if .OnePRT.PlankSeconds }}
+                  {{ prtMMSS .OnePRT.PlankSeconds }} = <strong>{{ .OnePRT.PlankScore }}</strong> pts
+                  {{ prtEventBadge .OnePRT.SexAtTest .OnePRT.AgeAtTest .OnePRT.AltitudeAtTest "plank" .OnePRT.PlankSeconds }}
+                {{ else }}—{{ end }}
+              </td>
+            </tr>
+            <tr>
+              <th>Run</th>
+              <td>
+                {{ if .OnePRT.RunSeconds }}
+                  {{ prtMMSS .OnePRT.RunSeconds }} = <strong>{{ .OnePRT.RunScore }}</strong> pts
+                  {{ prtEventBadge .OnePRT.SexAtTest .OnePRT.AgeAtTest .OnePRT.AltitudeAtTest "run" .OnePRT.RunSeconds }}
+                {{ else }}—{{ end }}
+              </td>
+            </tr>
+            <tr class="border-top">
+              <th>Overall</th>
+              <td>
+                {{ if .OnePRT.OverallScore }}
+                  <strong>{{ .OnePRT.OverallScore }}</strong> pts
+                  {{ with .OnePRT.OverallCategory }}<span class="badge bg-{{ prtCatClass . }}">{{ . }}</span>{{ end }}
+                {{ else }}—{{ end }}
+              </td>
+            </tr>
           </table>
         </div>
       </div>

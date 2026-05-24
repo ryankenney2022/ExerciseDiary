@@ -33,27 +33,29 @@
           <tr>
             <td><a href="/prt/edit/{{ .ID }}">{{ .Date }}</a></td>
             <td>
-              {{ if .Pushups }}{{ .Pushups }}{{ if .PushupScore }} <span class="text-muted small">({{ .PushupScore }})</span>{{ end }}{{ else }}—{{ end }}
+              {{ if .Pushups }}
+                {{ .Pushups }}{{ if .PushupScore }} <span class="text-muted small">({{ .PushupScore }} pts)</span>{{ end }}
+                <div class="mt-1">{{ prtEventBadge .SexAtTest .AgeAtTest .AltitudeAtTest "pushups" .Pushups }}</div>
+              {{ else }}—{{ end }}
             </td>
             <td>
-              {{ if .PlankSeconds }}{{ prtMMSS .PlankSeconds }}{{ if .PlankScore }} <span class="text-muted small">({{ .PlankScore }})</span>{{ end }}{{ else }}—{{ end }}
+              {{ if .PlankSeconds }}
+                {{ prtMMSS .PlankSeconds }}{{ if .PlankScore }} <span class="text-muted small">({{ .PlankScore }} pts)</span>{{ end }}
+                <div class="mt-1">{{ prtEventBadge .SexAtTest .AgeAtTest .AltitudeAtTest "plank" .PlankSeconds }}</div>
+              {{ else }}—{{ end }}
             </td>
             <td>
-              {{ if .RunSeconds }}{{ prtMMSS .RunSeconds }}{{ if .RunScore }} <span class="text-muted small">({{ .RunScore }})</span>{{ end }}{{ else }}—{{ end }}
+              {{ if .RunSeconds }}
+                {{ prtMMSS .RunSeconds }}{{ if .RunScore }} <span class="text-muted small">({{ .RunScore }} pts)</span>{{ end }}
+                <div class="mt-1">{{ prtEventBadge .SexAtTest .AgeAtTest .AltitudeAtTest "run" .RunSeconds }}</div>
+              {{ else }}—{{ end }}
             </td>
             <td>
               {{ if .OverallScore }}<strong>{{ .OverallScore }}</strong>{{ else }}—{{ end }}
             </td>
             <td>
               {{ with .OverallCategory }}
-              {{ $cls := "secondary" }}
-              {{ if eq . "Outstanding" }}{{ $cls = "success" }}{{ end }}
-              {{ if eq . "Excellent" }}{{ $cls = "primary" }}{{ end }}
-              {{ if eq . "Good" }}{{ $cls = "info" }}{{ end }}
-              {{ if eq . "Satisfactory" }}{{ $cls = "warning" }}{{ end }}
-              {{ if eq . "Probationary" }}{{ $cls = "warning" }}{{ end }}
-              {{ if eq . "Failure" }}{{ $cls = "danger" }}{{ end }}
-              <span class="badge bg-{{ $cls }}">{{ . }}</span>
+              <span class="badge bg-{{ prtCatClass . }}">{{ . }}</span>
               {{ end }}
             </td>
             <td class="text-end">

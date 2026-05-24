@@ -47,6 +47,8 @@ func Gui(dirPath, nodePath string) {
 		"ytEmbed":       YouTubeEmbed,
 		"prtMMSS":       prtFormatSeconds,
 		"prtEventLabel": prtEventLabel,
+		"prtEventBadge": prtEventBadge,
+		"prtCatClass":   prtCatClass,
 	}
 	templ := template.Must(template.New("").Funcs(funcMap).ParseFS(templFS, "templates/*"))
 	router.SetHTMLTemplate(templ) // templates

@@ -1,6 +1,9 @@
 package web
 
 import (
+	"fmt"
+	"html"
+	"html/template"
 	"net/http"
 	"strconv"
 
@@ -154,3 +157,39 @@ func prtEventLabel(sex string, age int, altitude, event string, raw int) string 
 
 // prtFormatSeconds - template helper for mm:ss display.
 func prtFormatSeconds(secs int) string { return prt.FormatMMSS(secs) }
+
+// prtCatClass - Bootstrap color suffix (success/primary/info/warning/danger)
+// for a Navy PRT category name. Works for the overall category and individual
+// event categories.
+func prtCatClass(category string) string {
+	switch category {
+	case "Outstanding":
+		return "success"
+	case "Excellent":
+		return "primary"
+	case "Good":
+		return "info"
+	case "Satisfactory", "Probationary":
+		return "warning"
+	case "Failure":
+		return "danger"
+	}
+	return "secondary"
+}
+
+// prtEventBadge - template helper that renders a colored category-level badge
+// for a single event. Returns empty HTML when there's nothing scoreable.
+func prtEventBadge(sex string, age int, altitude, event string, raw int) template.HTML {
+	if sex == "" || age == 0 || raw == 0 {
+		return ""
+	}
+	r := prt.Score(sex, age, altitude, event, raw)
+	if r.Category == "" {
+		return ""
+	}
+	return template.HTML(fmt.Sprintf(
+		`<span class="badge bg-%s">%s</span>`,
+		prtCatClass(r.Category),
+		html.EscapeString(r.Label()),
+	))
+}
