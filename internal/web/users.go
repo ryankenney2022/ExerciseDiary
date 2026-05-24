@@ -21,9 +21,14 @@ func usersHandler(c *gin.Context) {
 	c.HTML(http.StatusOK, "users.html", guiData)
 }
 
+// saveUserHandler handles both "add" (when id is empty/0) and "edit" (when id > 0).
 func saveUserHandler(c *gin.Context) {
 	name := c.PostForm("name")
 	color := c.PostForm("color")
+	sex := c.PostForm("sex")
+	dob := c.PostForm("dob")
+	altitude := c.PostForm("altitude")
+	idStr := c.PostForm("id")
 
 	if name == "" {
 		c.Redirect(http.StatusFound, "/users/")
@@ -32,8 +37,19 @@ func saveUserHandler(c *gin.Context) {
 	if color == "" {
 		color = "#0d6efd"
 	}
+	if altitude != "high" {
+		altitude = "low"
+	}
+	if sex != "M" && sex != "F" {
+		sex = ""
+	}
 
-	db.InsertUser(appConfig.DBPath, name, color)
+	id, _ := strconv.Atoi(idStr)
+	if id > 0 {
+		db.UpdateUser(appConfig.DBPath, id, name, color, sex, dob, altitude)
+	} else {
+		db.InsertUser(appConfig.DBPath, name, color, sex, dob, altitude)
+	}
 	c.Redirect(http.StatusFound, "/users/")
 }
 

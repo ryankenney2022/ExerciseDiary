@@ -41,15 +41,32 @@ func GetUserByName(path, name string) models.User {
 	return u
 }
 
-// InsertUser - create a new user; no-op if name already exists
-func InsertUser(path, name, color string) {
+// InsertUser - create a new user; no-op if name already exists.
+// Sex/DOB/Altitude can be empty and edited later.
+func InsertUser(path, name, color, sex, dob, altitude string) {
 	if existing := GetUserByName(path, name); existing.ID != 0 {
 		return
 	}
+	if altitude == "" {
+		altitude = "low"
+	}
 	now := time.Now().UTC().Format(time.RFC3339)
 	stmt := fmt.Sprintf(
-		`INSERT INTO users (NAME, COLOR, CREATED_AT) VALUES ('%s','%s','%s');`,
+		`INSERT INTO users (NAME, COLOR, CREATED_AT, SEX, DOB, ALTITUDE) VALUES ('%s','%s','%s','%s','%s','%s');`,
 		quoteStr(name), quoteStr(color), now,
+		quoteStr(sex), quoteStr(dob), quoteStr(altitude),
+	)
+	exec(path, stmt)
+}
+
+// UpdateUser - update an existing user's editable fields.
+func UpdateUser(path string, id int, name, color, sex, dob, altitude string) {
+	if altitude == "" {
+		altitude = "low"
+	}
+	stmt := fmt.Sprintf(
+		`UPDATE users SET NAME = '%s', COLOR = '%s', SEX = '%s', DOB = '%s', ALTITUDE = '%s' WHERE ID = '%d';`,
+		quoteStr(name), quoteStr(color), quoteStr(sex), quoteStr(dob), quoteStr(altitude), id,
 	)
 	exec(path, stmt)
 }

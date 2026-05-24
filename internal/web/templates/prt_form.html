@@ -1,0 +1,104 @@
+{{ define "prt_form.html" }}
+
+<body>
+<div class="container-lg mt-4">
+  <div class="row">
+    <div class="col-lg-7 mb-4">
+      <div class="card border-primary">
+        <div class="card-header">
+          {{ if .OnePRT.ID }}Edit PRT — {{ .OnePRT.Date }}{{ else }}New PRT{{ end }}
+        </div>
+        <div class="card-body">
+          <form action="/prt/" method="post">
+            <input type="hidden" name="id" value="{{ .OnePRT.ID }}">
+
+            <div class="mb-3">
+              <label class="form-label">Date</label>
+              <input name="date" type="date" class="form-control" required
+                     value="{{ if .OnePRT.Date }}{{ .OnePRT.Date }}{{ end }}"
+                     {{ if not .OnePRT.Date }}id="dateInputToday"{{ end }}>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label">Pushups (count)</label>
+                <input name="pushups" type="number" min="0" class="form-control"
+                       value="{{ if .OnePRT.Pushups }}{{ .OnePRT.Pushups }}{{ end }}"
+                       placeholder="leave blank if skipped">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Forearm plank (mm:ss)</label>
+                <input name="plank_mmss" type="text" pattern="^\d+:[0-5]\d$" class="form-control"
+                       value="{{ prtMMSS .OnePRT.PlankSeconds }}"
+                       placeholder="e.g. 2:30">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">1.5-mile run (mm:ss)</label>
+                <input name="run_mmss" type="text" pattern="^\d+:[0-5]\d$" class="form-control"
+                       value="{{ prtMMSS .OnePRT.RunSeconds }}"
+                       placeholder="e.g. 11:30">
+              </div>
+            </div>
+
+            <div class="mt-3">
+              <label class="form-label">Note (optional)</label>
+              <textarea name="note" rows="2" class="form-control" placeholder="How it went, conditions, etc.">{{ .OnePRT.Note }}</textarea>
+            </div>
+
+            <div class="mt-3 d-flex justify-content-between">
+              <a href="/prt/" class="btn btn-outline-secondary">Cancel</a>
+              <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-5 mb-4">
+      <div class="card border-secondary">
+        <div class="card-header">Scoring uses</div>
+        <div class="card-body">
+          <dl class="row mb-0">
+            <dt class="col-5">Sex</dt><dd class="col-7">{{ with .CurrentUser.Sex }}{{ . }}{{ else }}<span class="text-warning">— set on profile</span>{{ end }}</dd>
+            <dt class="col-5">DOB</dt><dd class="col-7">{{ with .CurrentUser.DOB }}{{ . }}{{ else }}<span class="text-warning">— set on profile</span>{{ end }}</dd>
+            <dt class="col-5">Altitude</dt><dd class="col-7">{{ if eq .CurrentUser.Altitude "high" }}≥5000 ft{{ else }}&lt;5000 ft{{ end }}</dd>
+          </dl>
+          {{ if or (not .CurrentUser.Sex) (not .CurrentUser.DOB) }}
+          <div class="alert alert-warning mt-3 mb-0 small">
+            Without Sex + DOB the test will save the raw inputs but won't have a calculated score.
+            <a href="/users/" class="alert-link">Update profile</a>.
+          </div>
+          {{ else if .OnePRT.AgeAtTest }}
+          <div class="text-muted small mt-3">Age at test: <strong>{{ .OnePRT.AgeAtTest }}</strong></div>
+          {{ end }}
+        </div>
+      </div>
+
+      {{ if .OnePRT.ID }}
+      <div class="card border-primary mt-3">
+        <div class="card-header">Current scores</div>
+        <div class="card-body">
+          <table class="table table-borderless table-sm mb-0">
+            <tr><th>Pushups</th><td>{{ if .OnePRT.Pushups }}{{ .OnePRT.Pushups }} = <strong>{{ .OnePRT.PushupScore }}</strong> pts{{ else }}—{{ end }}</td></tr>
+            <tr><th>Plank</th><td>{{ if .OnePRT.PlankSeconds }}{{ prtMMSS .OnePRT.PlankSeconds }} = <strong>{{ .OnePRT.PlankScore }}</strong> pts{{ else }}—{{ end }}</td></tr>
+            <tr><th>Run</th><td>{{ if .OnePRT.RunSeconds }}{{ prtMMSS .OnePRT.RunSeconds }} = <strong>{{ .OnePRT.RunScore }}</strong> pts{{ else }}—{{ end }}</td></tr>
+            <tr class="border-top"><th>Overall</th><td>{{ if .OnePRT.OverallScore }}<strong>{{ .OnePRT.OverallScore }}</strong> pts — {{ .OnePRT.OverallCategory }}{{ else }}—{{ end }}</td></tr>
+          </table>
+        </div>
+      </div>
+      {{ end }}
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var d = document.getElementById('dateInputToday');
+  if (d && !d.value) {
+    d.value = new Date().toISOString().slice(0, 10);
+  }
+})();
+</script>
+
+{{ template "footer.html" }}
+{{ end }}

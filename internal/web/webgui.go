@@ -44,7 +44,9 @@ func Gui(dirPath, nodePath string) {
 	router := gin.Default()
 
 	funcMap := template.FuncMap{
-		"ytEmbed": YouTubeEmbed,
+		"ytEmbed":       YouTubeEmbed,
+		"prtMMSS":       prtFormatSeconds,
+		"prtEventLabel": prtEventLabel,
 	}
 	templ := template.Must(template.New("").Funcs(funcMap).ParseFS(templFS, "templates/*"))
 	router.SetHTMLTemplate(templ) // templates
@@ -62,6 +64,9 @@ func Gui(dirPath, nodePath string) {
 	router.GET("/stats/", auth.Auth(&authConf), statsHandler)       // stats.go
 	router.GET("/weight/", auth.Auth(&authConf), weightHandler)     // weight.go
 	router.GET("/users/", auth.Auth(&authConf), usersHandler)       // users.go
+	router.GET("/prt/", auth.Auth(&authConf), prtListHandler)       // prt.go
+	router.GET("/prt/new", auth.Auth(&authConf), prtFormHandler)    // prt.go
+	router.GET("/prt/edit/:id", auth.Auth(&authConf), prtFormHandler) // prt.go
 
 	router.POST("/config/", auth.Auth(&authConf), saveConfigHandler)     // config.go
 	router.POST("/config/auth", auth.Auth(&authConf), saveConfigAuth)    // config.go
@@ -71,6 +76,8 @@ func Gui(dirPath, nodePath string) {
 	router.POST("/weight/", auth.Auth(&authConf), addWeightHandler)      // weight.go
 	router.POST("/users/", auth.Auth(&authConf), saveUserHandler)        // users.go
 	router.POST("/userdel/", auth.Auth(&authConf), deleteUserHandler)    // users.go
+	router.POST("/prt/", auth.Auth(&authConf), prtSaveHandler)           // prt.go
+	router.POST("/prtdel/", auth.Auth(&authConf), prtDeleteHandler)      // prt.go
 	router.POST("/user/switch", switchUserHandler)                       // middleware_user.go
 
 	err := router.Run(address)

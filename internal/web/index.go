@@ -32,6 +32,7 @@ func indexHandler(c *gin.Context) {
 	guiData.Users = allUsers(c)
 	guiData.CurrentUser = user
 	guiData.TodayWorkout = db.GetWorkoutByUserDate(appConfig.DBPath, user.ID, time.Now().Format("2006-01-02"))
+	guiData.LastPRT = db.GetLastPRTByUser(appConfig.DBPath, user.ID)
 
 	// Sort exercises by Place
 	sort.Slice(guiData.ExData.Exs, func(i, j int) bool {

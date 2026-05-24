@@ -20,12 +20,38 @@ func EnsureSchema(path string) {
 	addColumnIfMissing(path, "sets", "NOTE", "TEXT DEFAULT ''")
 	addColumnIfMissing(path, "weight", "USER_ID", "INTEGER")
 
+	addColumnIfMissing(path, "users", "SEX", "TEXT DEFAULT ''")
+	addColumnIfMissing(path, "users", "DOB", "TEXT DEFAULT ''")
+	addColumnIfMissing(path, "users", "ALTITUDE", "TEXT DEFAULT 'low'")
+
 	exec(path, `UPDATE exercises SET VIDEO_URL = '' WHERE VIDEO_URL IS NULL;`)
 	exec(path, `UPDATE sets SET NOTE = '' WHERE NOTE IS NULL;`)
+	exec(path, `UPDATE users SET SEX = '' WHERE SEX IS NULL;`)
+	exec(path, `UPDATE users SET DOB = '' WHERE DOB IS NULL;`)
+	exec(path, `UPDATE users SET ALTITUDE = 'low' WHERE ALTITUDE IS NULL OR ALTITUDE = '';`)
+
+	exec(path, `CREATE TABLE IF NOT EXISTS prt_tests (
+		"ID"                INTEGER PRIMARY KEY,
+		"USER_ID"           INTEGER NOT NULL,
+		"DATE"              TEXT NOT NULL,
+		"NOTE"              TEXT DEFAULT '',
+		"SEX_AT_TEST"       TEXT DEFAULT '',
+		"AGE_AT_TEST"       INTEGER DEFAULT 0,
+		"ALTITUDE_AT_TEST"  TEXT DEFAULT 'low',
+		"PUSHUPS"           INTEGER DEFAULT 0,
+		"PLANK_SECONDS"     INTEGER DEFAULT 0,
+		"RUN_SECONDS"       INTEGER DEFAULT 0,
+		"PUSHUP_SCORE"      INTEGER DEFAULT 0,
+		"PLANK_SCORE"       INTEGER DEFAULT 0,
+		"RUN_SCORE"         INTEGER DEFAULT 0,
+		"OVERALL_SCORE"     INTEGER DEFAULT 0,
+		"OVERALL_CATEGORY"  TEXT DEFAULT ''
+	);`)
 
 	exec(path, `CREATE INDEX IF NOT EXISTS idx_workouts_user_date ON workouts(USER_ID, DATE);`)
 	exec(path, `CREATE INDEX IF NOT EXISTS idx_sets_workout ON sets(WORKOUT_ID);`)
 	exec(path, `CREATE INDEX IF NOT EXISTS idx_weight_user ON weight(USER_ID);`)
+	exec(path, `CREATE INDEX IF NOT EXISTS idx_prt_user_date ON prt_tests(USER_ID, DATE DESC);`)
 }
 
 func addColumnIfMissing(path, table, column, colType string) {

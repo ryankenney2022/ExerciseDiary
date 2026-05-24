@@ -70,6 +70,43 @@
       </div>
     </div>
   </div>
+  {{ if .LastPRT.ID }}
+  <div class="row">
+    <div class="col-md-6 mb-4">
+      <div class="card border-primary">
+        <div class="card-header d-flex justify-content-between">
+          <span>Last PRT — {{ .LastPRT.Date }}</span>
+          <a href="/prt/" class="small">view all</a>
+        </div>
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="me-4">
+              <div class="display-6 mb-0">{{ if .LastPRT.OverallScore }}{{ .LastPRT.OverallScore }}{{ else }}—{{ end }}</div>
+              <div class="text-muted small">overall</div>
+            </div>
+            <div>
+              {{ with .LastPRT.OverallCategory }}
+              {{ $cls := "secondary" }}
+              {{ if eq . "Outstanding" }}{{ $cls = "success" }}{{ end }}
+              {{ if eq . "Excellent" }}{{ $cls = "primary" }}{{ end }}
+              {{ if eq . "Good" }}{{ $cls = "info" }}{{ end }}
+              {{ if eq . "Satisfactory" }}{{ $cls = "warning" }}{{ end }}
+              {{ if eq . "Probationary" }}{{ $cls = "warning" }}{{ end }}
+              {{ if eq . "Failure" }}{{ $cls = "danger" }}{{ end }}
+              <span class="badge bg-{{ $cls }} fs-6">{{ . }}</span>
+              {{ end }}
+              <div class="small text-muted mt-2">
+                {{ if .LastPRT.Pushups }}P/U {{ .LastPRT.Pushups }} ({{ .LastPRT.PushupScore }}){{ end }}
+                {{ if .LastPRT.PlankSeconds }} · Plank {{ prtMMSS .LastPRT.PlankSeconds }} ({{ .LastPRT.PlankScore }}){{ end }}
+                {{ if .LastPRT.RunSeconds }} · Run {{ prtMMSS .LastPRT.RunSeconds }} ({{ .LastPRT.RunScore }}){{ end }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {{ end }}
     <div class="row">
         <div class="col-md mb-4">
             <div class="accordion">
