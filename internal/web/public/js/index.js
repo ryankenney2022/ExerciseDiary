@@ -114,18 +114,11 @@ function insertClusterGrouped(tbody, newRows, group, name) {
         }
     }
 
-    // 1) Prefer to insert right after the LAST same-name row in this group.
-    const sameNameRows = tbody.querySelectorAll(
-        `tr[data-group="${cssEsc(group)}"][data-name="${cssEsc(name)}"]`
-    );
-    if (sameNameRows.length) {
-        const lastSame = sameNameRows[sameNameRows.length - 1];
-        insertAfterCluster(tbody, lastSame, newRows);
-        return;
-    }
-
-    // 2) Otherwise insert at the end of this group's section (which means
-    //    right before the NEXT group header, or at the very end).
+    // Always insert at the end of this group's section. Same-name rows are
+    // NOT auto-stacked any more — the user's drag-drop order wins. (Earlier
+    // versions snapped duplicates together, but that fought with manual
+    // reorders.) "End of section" = right before the NEXT group header, or
+    // at the very end of the tbody.
     let cursor = header.nextSibling;
     while (cursor && !(cursor.nodeType === 1 && cursor.classList && cursor.classList.contains('todayex-group-header'))) {
         cursor = cursor.nextSibling;
