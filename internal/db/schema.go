@@ -61,10 +61,24 @@ func EnsureSchema(path string) {
 		"OVERALL_CATEGORY"  TEXT DEFAULT ''
 	);`)
 
+	exec(path, `CREATE TABLE IF NOT EXISTS equipment (
+		"USER_ID"        INTEGER PRIMARY KEY,
+		"BARBELL_WEIGHT" REAL DEFAULT 45,
+		"UNIT"           TEXT DEFAULT 'lb'
+	);`)
+
+	exec(path, `CREATE TABLE IF NOT EXISTS plates (
+		"ID"         INTEGER PRIMARY KEY,
+		"USER_ID"    INTEGER NOT NULL,
+		"WEIGHT"     REAL NOT NULL,
+		"PAIR_COUNT" INTEGER DEFAULT 0
+	);`)
+
 	exec(path, `CREATE INDEX IF NOT EXISTS idx_workouts_user_date ON workouts(USER_ID, DATE);`)
 	exec(path, `CREATE INDEX IF NOT EXISTS idx_sets_workout ON sets(WORKOUT_ID);`)
 	exec(path, `CREATE INDEX IF NOT EXISTS idx_weight_user ON weight(USER_ID);`)
 	exec(path, `CREATE INDEX IF NOT EXISTS idx_prt_user_date ON prt_tests(USER_ID, DATE DESC);`)
+	exec(path, `CREATE INDEX IF NOT EXISTS idx_plates_user ON plates(USER_ID);`)
 }
 
 func addColumnIfMissing(path, table, column, colType string) {

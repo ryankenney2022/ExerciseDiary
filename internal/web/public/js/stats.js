@@ -43,9 +43,12 @@ function setStatsPage(sets, hcolor, off, step) {
     document.getElementById('stats-table').innerHTML = "";
 
 
-    for (let i = start ; i < end; i++) {
+    // Table: newest first (top row = most recent). Charts: keep chronological
+    // (left = oldest, right = newest) so the time axis reads correctly.
+    for (let i = end - 1; i >= start; i--) {
         addSet(i+1, exs[i].Date, exs[i].Reps, exs[i].Weight);
-
+    };
+    for (let i = start ; i < end; i++) {
         dates.push(exs[i].Date);
         reps.push(exs[i].Reps);
         ws.push(exs[i].Weight);

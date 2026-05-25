@@ -3,6 +3,7 @@
 <script src="/fs/public/js/heatmap.js"></script>
 <script src="/fs/public/js/index.js"></script>
 <script src="/fs/public/js/weight-chart.js"></script>
+<script src="/fs/public/js/plates.js"></script>
 <link rel="stylesheet" type="text/css" href="/fs/public/css/index.css" />
 <body>
 <!-- Add Weight Modal -->
@@ -190,6 +191,12 @@
                             <button type="button" class="btn del-set-button px-2" onclick='addExercise({{ . }})' title="Add">
                                 <i class="bi bi-arrow-right-square"></i>
                             </button>
+                            <form action="/exdel/" method="post" class="m-0" onsubmit="return confirm('Delete exercise &quot;{{ .Name }}&quot; from the master list? Past workout history for this exercise stays intact.');">
+                                <input type="hidden" name="id" value="{{ .ID }}">
+                                <button type="submit" class="btn del-set-button px-2 text-danger" title="Delete from library">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
                         </div>
                         {{ end }}
                         {{ end }}
@@ -269,10 +276,11 @@
 
 <script>
   window.allExercises = {{ .ExData.Exs }};
+  window.allSets = {{ .ExData.Sets }};
   window.distanceUnit = "{{ .CurrentUser.DistanceUnit }}" || "mi";
-  setFormDate({{ .ExData.Sets }});
+  setFormDate(window.allSets);
   generateWeightChart({{ .ExData.Weight }}, {{ .Config.HeatColor }}, -7);
-  makeChart({{ .HeatMap }}, {{ .Config.HeatColor }}, {{ .ExData.Sets }});
+  makeChart({{ .HeatMap }}, {{ .Config.HeatColor }}, window.allSets);
 </script>
 {{ template "footer.html" }}
 {{ end }}

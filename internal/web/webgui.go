@@ -71,6 +71,8 @@ func Gui(dirPath, nodePath string) {
 	router.GET("/prt/", auth.Auth(&authConf), prtListHandler)       // prt.go
 	router.GET("/prt/new", auth.Auth(&authConf), prtFormHandler)    // prt.go
 	router.GET("/prt/edit/:id", auth.Auth(&authConf), prtFormHandler) // prt.go
+	router.GET("/equipment/", auth.Auth(&authConf), equipmentHandler) // equipment.go
+	router.GET("/equipment/suggest", auth.Auth(&authConf), suggestPlatesHandler) // equipment.go
 
 	router.POST("/config/", auth.Auth(&authConf), saveConfigHandler)     // config.go
 	router.POST("/config/auth", auth.Auth(&authConf), saveConfigAuth)    // config.go
@@ -82,6 +84,7 @@ func Gui(dirPath, nodePath string) {
 	router.POST("/userdel/", auth.Auth(&authConf), deleteUserHandler)    // users.go
 	router.POST("/prt/", auth.Auth(&authConf), prtSaveHandler)           // prt.go
 	router.POST("/prtdel/", auth.Auth(&authConf), prtDeleteHandler)      // prt.go
+	router.POST("/equipment/", auth.Auth(&authConf), saveEquipmentHandler) // equipment.go
 	router.POST("/user/switch", switchUserHandler)                       // middleware_user.go
 
 	err := router.Run(address)

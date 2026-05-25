@@ -42,3 +42,52 @@
 }
 /* Make the Name input use the full column so long exercise names don't truncate. */
 .table-todayex .todayex-name-input { min-width: 0; }
+
+/* Strength row steppers: thin two-button bar under the number input.
+   Big enough for thumbs (44px target), but visually subordinate to the
+   number itself so the row doesn't feel cluttered. */
+.table-todayex .todayex-stepper {
+    display: flex;
+    gap: 0.25rem;
+    margin-top: 0.15rem;
+}
+.table-todayex .todayex-stepper .btn {
+    flex: 1;
+    padding: 0.1rem 0;
+    line-height: 1;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border: 1px solid var(--bs-border-color);
+    color: var(--bs-secondary-color);
+    background: var(--bs-tertiary-bg);
+}
+.table-todayex .todayex-stepper .btn:hover {
+    background: var(--bs-secondary-bg);
+}
+
+/* Tighten number inputs so the stepper underneath isn't pushed too low. */
+.table-todayex .todayex-num {
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+}
+
+/* History-chips ribbon row (above each strength row). Small, low-contrast,
+   doesn't compete with the input row visually. */
+.table-todayex .todayex-hist-row td {
+    border-top: 1px solid var(--bs-border-color);
+    border-bottom: none;
+}
+.table-todayex .todayex-hist-row .btn {
+    font-size: 0.8rem;
+    line-height: 1.2;
+}
+
+/* Plate hint sits under the weight stepper. Only visible when populated. */
+.table-todayex .todayex-plate-hint:empty {
+    display: none;
+}
+.table-todayex .todayex-plate-hint {
+    margin-top: 0.15rem;
+    font-size: 0.75rem;
+    line-height: 1.1;
+}

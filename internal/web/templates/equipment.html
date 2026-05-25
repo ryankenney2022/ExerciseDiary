@@ -1,0 +1,106 @@
+{{ define "equipment.html" }}
+
+<body>
+<div class="container-lg mt-4">
+  <div class="row">
+    <div class="col-lg-7 mb-4">
+      <div class="card border-primary">
+        <div class="card-header">Barbell &amp; plates</div>
+        <div class="card-body">
+          <form action="/equipment/" method="post" id="equipmentForm">
+            <div class="mb-3 row align-items-center">
+              <label for="barbellWeight" class="col-sm-4 col-form-label">Barbell weight (lb)</label>
+              <div class="col-sm-4">
+                <input name="barbell_weight" type="number" step="any" min="0" id="barbellWeight" class="form-control" value="{{ .Equipment.BarbellWeight }}">
+              </div>
+            </div>
+
+            <p class="small text-muted mb-1">
+              Enter the number of <strong>pairs</strong> of each plate you own (loading is symmetric on the bar).
+              For example, two pairs of 25-lb plates = four 25-lb plates total.
+            </p>
+
+            <table class="table table-sm table-borderless align-middle">
+              <thead>
+                <tr>
+                  <th>Plate weight (lb)</th>
+                  <th style="width:9em">Pairs owned</th>
+                  <th style="width:3em"></th>
+                </tr>
+              </thead>
+              <tbody id="plateRows">
+                {{ range .Plates }}
+                <tr>
+                  <td><input name="plate_weight" type="number" step="any" min="0" class="form-control" value="{{ .Weight }}"></td>
+                  <td><input name="plate_pairs"  type="number" step="1"   min="0" class="form-control" value="{{ .PairCount }}"></td>
+                  <td><button type="button" class="btn del-set-button p-1" onclick="removePlateRow(this)" title="Remove"><i class="bi bi-x-square"></i></button></td>
+                </tr>
+                {{ end }}
+              </tbody>
+            </table>
+
+            <div class="mb-3">
+              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addPlateRow()">
+                <i class="bi bi-plus-square"></i> Add plate denomination
+              </button>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Save</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-5 mb-4">
+      <div class="card border-secondary">
+        <div class="card-header">Try it</div>
+        <div class="card-body">
+          <p class="small text-muted">
+            Type a target total weight to see the recommended plate loading for one side of the bar.
+            The hint also appears under each strength row's weight stepper on the home page.
+          </p>
+          <div class="input-group mb-3">
+            <span class="input-group-text">Target</span>
+            <input id="tryTarget" type="number" step="any" min="0" class="form-control" placeholder="e.g. 135">
+            <span class="input-group-text">lb</span>
+          </div>
+          <div id="tryResult" class="border rounded p-3 bg-body-tertiary small"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/fs/public/js/plates.js"></script>
+<script>
+function addPlateRow() {
+  const tbody = document.getElementById('plateRows');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input name="plate_weight" type="number" step="any" min="0" class="form-control" placeholder="e.g. 45"></td>
+    <td><input name="plate_pairs"  type="number" step="1"   min="0" class="form-control" value="0"></td>
+    <td><button type="button" class="btn del-set-button p-1" onclick="removePlateRow(this)" title="Remove"><i class="bi bi-x-square"></i></button></td>`;
+  tbody.appendChild(tr);
+}
+function removePlateRow(btn) {
+  const tr = btn.closest('tr');
+  if (tr) tr.remove();
+}
+
+// Live preview wired to the JSON endpoint.
+document.getElementById('tryTarget').addEventListener('input', async function() {
+  const t = parseFloat(this.value || "0") || 0;
+  const out = document.getElementById('tryResult');
+  if (t <= 0) { out.innerHTML = '<span class="text-muted">Enter a target weight.</span>'; return; }
+  try {
+    const r = await fetch('/equipment/suggest?weight=' + encodeURIComponent(String(t)));
+    const j = await r.json();
+    out.innerHTML = formatSuggestion(j);
+  } catch (e) {
+    out.innerHTML = '<span class="text-danger">Could not compute (' + e + ').</span>';
+  }
+});
+</script>
+
+{{ template "footer.html" }}
+{{ end }}

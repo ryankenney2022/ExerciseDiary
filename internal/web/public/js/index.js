@@ -44,13 +44,29 @@ function renderStrengthRow(rowId, name, obj) {
     const safeWeight = escapeHTMLAttr(obj.Weight ?? 0);
     const safeReps = escapeHTMLAttr(obj.Reps ?? 0);
     const safeNote = escapeHTMLAttr(obj.Note || "");
-    return `<tr id="${rowId}" data-kind="strength">
+    const chips = renderHistoryChips(rowId, name);
+
+    return `<tr id="hist-${rowId}" class="todayex-hist-row" data-parent="${rowId}">
+        <td colspan="5" class="py-1 px-2 bg-body-tertiary small">
+            <div class="d-flex flex-wrap gap-1 align-items-center">${chips}</div>
+        </td>
+    </tr>
+    <tr id="${rowId}" data-kind="strength">
     <td class="todayex-name">
         <input name="name" type="text" class="form-control todayex-name-input" value="${safeName}">
     </td><td class="todayex-weight">
-        <input name="weight" type="number" step="any" min="0" class="form-control" value="${safeWeight}">
+        <input name="weight" type="number" step="any" min="0" class="form-control todayex-num" value="${safeWeight}">
+        <div class="todayex-stepper">
+            <button type="button" class="btn btn-sm" tabindex="-1" onclick="bumpNum(${rowId}, 'weight', -2.5, 0)">−</button>
+            <button type="button" class="btn btn-sm" tabindex="-1" onclick="bumpNum(${rowId}, 'weight', +2.5, 0)">+</button>
+        </div>
+        <div class="todayex-plate-hint small text-muted" data-row="${rowId}"></div>
     </td><td class="todayex-reps">
-        <input name="reps" type="number" min="0" class="form-control" value="${safeReps}">
+        <input name="reps" type="number" min="0" class="form-control todayex-num" value="${safeReps}">
+        <div class="todayex-stepper">
+            <button type="button" class="btn btn-sm" tabindex="-1" onclick="bumpNum(${rowId}, 'reps', -1, 0)">−</button>
+            <button type="button" class="btn btn-sm" tabindex="-1" onclick="bumpNum(${rowId}, 'reps', +1, 0)">+</button>
+        </div>
     </td><td class="todayex-note d-none d-md-table-cell">
         <input name="note" type="text" class="form-control" placeholder="(optional)" value="${safeNote}">
         <input type="hidden" name="duration_mmss" value="">
@@ -60,10 +76,109 @@ function renderStrengthRow(rowId, name, obj) {
         <input type="hidden" name="calories" value="0">
         <input type="hidden" name="equipment" value="">
     </td><td class="todayex-del">
-        <button class="btn del-set-button" type="button" title="Delete" onclick="delExercise(${rowId})">
-            <i class="bi bi-x-square"></i>
-        </button>
+        <div class="vstack gap-1">
+            <button class="btn del-set-button p-1" type="button" title="Repeat this set" onclick="repeatRow(${rowId})">
+                <i class="bi bi-arrow-repeat"></i>
+            </button>
+            <button class="btn del-set-button p-1" type="button" title="Delete" onclick="delExercise(${rowId})">
+                <i class="bi bi-x-square"></i>
+            </button>
+        </div>
     </td></tr>`;
+}
+
+// renderHistoryChips returns the inline HTML for the most-recent N sets of an
+// exercise (this user, any past date, newest first). Each chip auto-fills the
+// weight/reps inputs in the parent row when tapped.
+function renderHistoryChips(rowId, name) {
+    const past = lastNStrengthSetsFor(name, 5);
+    if (!past.length) {
+        return `<span class="text-muted">No prior sets for <em>${escapeHTMLAttr(name)}</em></span>`;
+    }
+    const today = document.getElementById("formDate") ? document.getElementById("formDate").value : "";
+    const chips = past.map(s => {
+        const w = String(s.Weight ?? 0);
+        const r = String(s.Reps ?? 0);
+        const label = `${w}×${r}`;
+        const dateLabel = (s.Date === today) ? "earlier today" : s.Date;
+        return `<button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2"
+                    title="${dateLabel}"
+                    onclick="fillRow(${rowId}, ${w}, ${r})">${label}</button>`;
+    }).join("");
+    return `<span class="text-muted me-1">Recent:</span>${chips}`;
+}
+
+// lastNStrengthSetsFor returns up to n recent sets (newest first, de-duplicated
+// by weight×reps combo) for the given exercise name. Cardio-kind sets are
+// skipped so chips stay numeric.
+function lastNStrengthSetsFor(name, n) {
+    const all = window.allSets || [];
+    if (kindForName(name) === "cardio") return [];
+    const out = [];
+    const seen = new Set();
+    for (let i = all.length - 1; i >= 0 && out.length < n; i--) {
+        const s = all[i];
+        if (s.Name !== name) continue;
+        const key = `${s.Weight}|${s.Reps}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push(s);
+    }
+    return out;
+}
+
+function fillRow(rowId, weight, reps) {
+    const row = document.getElementById(rowId);
+    if (!row) return;
+    const w = row.querySelector('input[name="weight"]');
+    const r = row.querySelector('input[name="reps"]');
+    if (w) { w.value = weight; w.dispatchEvent(new Event("input", { bubbles: true })); }
+    if (r) { r.value = reps; r.dispatchEvent(new Event("input", { bubbles: true })); }
+}
+
+function bumpNum(rowId, fieldName, delta, min) {
+    const row = document.getElementById(rowId);
+    if (!row) return;
+    const el = row.querySelector('input[name="' + fieldName + '"]');
+    if (!el) return;
+    const cur = parseFloat(el.value || "0") || 0;
+    let next = cur + delta;
+    if (typeof min === "number" && next < min) next = min;
+    // Round to avoid 137.49999 from float math when stepping by 2.5.
+    next = Math.round(next * 100) / 100;
+    el.value = next;
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+// Plate-hint refresh hook. Called whenever a strength row's weight input
+// changes. Looks for window.suggestPlates(weight) provided by the plate
+// calculator (task 6) and renders its HTML into the row's hint slot.
+// No-op until that module is loaded.
+function refreshPlateHint(row) {
+    const hint = row.querySelector('.todayex-plate-hint');
+    if (!hint) return;
+    if (typeof window.suggestPlates !== "function") { hint.innerHTML = ""; return; }
+    const w = parseFloat(row.querySelector('input[name="weight"]').value || "0") || 0;
+    hint.innerHTML = window.suggestPlates(w);
+}
+
+// Delegate input events on the today-form so newly-added rows pick up plate
+// hint refresh without per-row wiring.
+document.addEventListener("input", function(ev) {
+    const t = ev.target;
+    if (!t || t.name !== "weight") return;
+    const row = t.closest('tr[data-kind="strength"]');
+    if (row) refreshPlateHint(row);
+});
+
+function repeatRow(rowId) {
+    const row = document.getElementById(rowId);
+    if (!row) return;
+    const name = row.querySelector('input[name="name"]').value;
+    const weight = row.querySelector('input[name="weight"]').value;
+    const reps = row.querySelector('input[name="reps"]').value;
+    const note = row.querySelector('input[name="note"]').value;
+    addExercise({ Name: name, Weight: weight, Reps: reps, Note: note, Kind: "strength" });
 }
 
 function renderCardioRow(rowId, name, obj) {
@@ -174,7 +289,9 @@ function setWeightDate() {
 function delExercise(exID) {
     const row = document.getElementById(exID);
     const adv = document.getElementById('adv-' + exID);
+    const hist = document.getElementById('hist-' + exID);
     if (adv) adv.remove();
+    if (hist) hist.remove();
     if (row) row.remove();
 }
 
@@ -213,6 +330,29 @@ function showWeightCard() {
     try {
         if (localStorage.getItem('hideWeightCard') === '1') {
             document.addEventListener('DOMContentLoaded', hideWeightCard);
+        }
+    } catch (e) {}
+})();
+
+// PRT standards card visibility (persisted in localStorage)
+function hidePrtStandards() {
+    const card = document.getElementById('prtStandardsCard');
+    const btn = document.getElementById('prtStandardsShowBtn');
+    if (card) card.classList.add('d-none');
+    if (btn) btn.classList.remove('d-none');
+    try { localStorage.setItem('hidePrtStandards', '1'); } catch (e) {}
+}
+function showPrtStandards() {
+    const card = document.getElementById('prtStandardsCard');
+    const btn = document.getElementById('prtStandardsShowBtn');
+    if (card) card.classList.remove('d-none');
+    if (btn) btn.classList.add('d-none');
+    try { localStorage.removeItem('hidePrtStandards'); } catch (e) {}
+}
+(function() {
+    try {
+        if (localStorage.getItem('hidePrtStandards') === '1') {
+            document.addEventListener('DOMContentLoaded', hidePrtStandards);
         }
     } catch (e) {}
 })();

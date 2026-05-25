@@ -155,6 +155,8 @@ type GuiData struct {
 	ExPlaces     []string // distinct, sorted "place in group" values across all exercises
 	LastDone     map[string]string // exercise name -> most recent DATE the current user logged it
 	CardioSummary CardioSummary // 7-day cardio totals for the current user (Stats page)
+	Equipment    Equipment // current user's barbell + unit (for /equipment/)
+	Plates       []Plate   // current user's plate inventory (for /equipment/)
 }
 
 // CardioSummary aggregates a user's cardio activity over a recent window.
@@ -163,4 +165,40 @@ type CardioSummary struct {
 	TotalDist    decimal.Decimal
 	Unit         string
 	SessionCount int
+}
+
+// Equipment - one row per user storing their barbell weight + unit preference.
+// Used by the plate calculator together with Plate rows.
+type Equipment struct {
+	UserID        int             `db:"USER_ID"`
+	BarbellWeight decimal.Decimal `db:"BARBELL_WEIGHT"`
+	Unit          string          `db:"UNIT"` // "lb" (default) or "kg"
+}
+
+// Plate - one plate denomination in a user's inventory.
+// PairCount counts PAIRS available (loading is symmetric on a barbell), so
+// PairCount=2 means the user has four 25-lb plates total.
+type Plate struct {
+	ID        int             `db:"ID"`
+	UserID    int             `db:"USER_ID"`
+	Weight    decimal.Decimal `db:"WEIGHT"`
+	PairCount int             `db:"PAIR_COUNT"`
+}
+
+// PlateSuggestion - greedy plate-loading recommendation for a target weight.
+// SidePlates lists which plates to load on EACH side of the bar, descending by
+// weight. Remainder is whatever weight couldn't be covered by available plates.
+type PlateSuggestion struct {
+	TargetWeight  decimal.Decimal
+	BarbellWeight decimal.Decimal
+	Unit          string
+	SidePlates    []PlateCount    // each entry: how many of this plate per side
+	Remainder     decimal.Decimal // unmet weight per SIDE (0 = exact)
+	Achievable    decimal.Decimal // actual total weight loaded (bar + plates)
+}
+
+// PlateCount is one line of a plate-loading recommendation.
+type PlateCount struct {
+	Weight decimal.Decimal
+	Count  int // per side
 }
