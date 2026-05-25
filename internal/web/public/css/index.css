@@ -188,3 +188,26 @@
     font-variant-numeric: tabular-nums;
     text-align: center;
 }
+
+/* Drag handle on each workout row. Cursor + touch-action hints make the
+   grip discoverable; touch-action: none prevents the page from scrolling
+   when the user long-presses the handle to drag a row. */
+.table-todayex .todayex-drag-handle {
+    cursor: grab;
+    touch-action: none;
+    background: var(--bs-tertiary-bg);
+    color: var(--bs-secondary-color);
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+.table-todayex .todayex-drag-handle:active {
+    cursor: grabbing;
+}
+
+/* SortableJS visual states */
+.todayex-drag-ghost {
+    opacity: 0.35;
+}
+.todayex-drag-chosen {
+    background: var(--bs-tertiary-bg);
+}

@@ -235,7 +235,10 @@ function renderStrengthRow(rowId, name, obj) {
     </tr>
     <tr id="${rowId}" data-kind="strength">
     <td class="todayex-name">
-        <input name="name" type="text" class="form-control todayex-name-input" value="${safeName}">
+        <div class="input-group">
+            <span class="input-group-text todayex-drag-handle" title="Drag to reorder"><i class="bi bi-grip-vertical"></i></span>
+            <input name="name" type="text" class="form-control todayex-name-input" value="${safeName}">
+        </div>
     </td><td class="todayex-weight">
         <input name="weight" type="number" step="any" min="0" class="form-control todayex-num" value="${safeWeight}">
         <div class="todayex-stepper">
@@ -291,7 +294,10 @@ function renderTimedStrengthRow(rowId, name, obj) {
     </tr>
     <tr id="${rowId}" data-kind="strength" data-mode="timed">
     <td class="todayex-name">
-        <input name="name" type="text" class="form-control todayex-name-input" value="${safeName}">
+        <div class="input-group">
+            <span class="input-group-text todayex-drag-handle" title="Drag to reorder"><i class="bi bi-grip-vertical"></i></span>
+            <input name="name" type="text" class="form-control todayex-name-input" value="${safeName}">
+        </div>
     </td><td class="todayex-weight">
         <div class="btn-group" role="group">
             <button type="button" class="btn btn-sm btn-success" onclick="timedStrengthStart(${rowId})"><i class="bi bi-play-fill"></i> Start</button>
@@ -544,7 +550,10 @@ function renderCardioRow(rowId, name, obj) {
 
     return `<tr id="${rowId}" data-kind="cardio">
     <td class="todayex-name">
-        <input name="name" type="text" class="form-control todayex-name-input" value="${safeName}">
+        <div class="input-group">
+            <span class="input-group-text todayex-drag-handle" title="Drag to reorder"><i class="bi bi-grip-vertical"></i></span>
+            <input name="name" type="text" class="form-control todayex-name-input" value="${safeName}">
+        </div>
     </td><td class="todayex-weight">
         <div class="input-group">
             <input name="distance_value" type="number" step="any" min="0" class="form-control" placeholder="dist" value="${safeDist}">
@@ -623,6 +632,72 @@ function setFormDate(sets) {
         }
     }
     setFormContent(sets, today);
+    initSortable();
+}
+
+// initSortable wires SortableJS to the today-workout tbody once, allowing
+// the user to drag and drop strength/cardio/timed rows within their group
+// (cross-group drags are rejected via onMove). Touch-friendly: a 150ms hold
+// on the grip handle starts the drag so accidental list-scrolls don't fire.
+let sortableInstance = null;
+function initSortable() {
+    if (sortableInstance) return; // single-init
+    if (typeof Sortable === "undefined") return; // CDN not loaded
+    const tbody = document.getElementById('todayEx');
+    if (!tbody) return;
+    sortableInstance = Sortable.create(tbody, {
+        handle: '.todayex-drag-handle',
+        // hist-${id} (above main strength row) and adv-${id} (below cardio
+        // main row) are helper TRs and group headers are anchors; none
+        // should be draggable themselves.
+        filter: '.todayex-group-header, .todayex-hist-row, [id^="adv-"]',
+        draggable: 'tr[data-kind]',
+        delay: 150,
+        delayOnTouchOnly: true,
+        animation: 150,
+        ghostClass: 'todayex-drag-ghost',
+        chosenClass: 'todayex-drag-chosen',
+        // Reject drops outside the source row's own group.
+        onMove(evt) {
+            const dragGroup = evt.dragged && evt.dragged.dataset.group;
+            const related = evt.related;
+            if (!related || !dragGroup) return true;
+            let relGroup = related.dataset.group;
+            if (!relGroup) {
+                // Helper rows (hist-${id}/adv-${id}) don't carry data-group
+                // themselves — resolve via their parent main row.
+                if (related.classList.contains('todayex-hist-row')) {
+                    const p = document.getElementById(related.dataset.parent);
+                    relGroup = p && p.dataset.group;
+                } else if (related.id && related.id.startsWith('adv-')) {
+                    const p = document.getElementById(related.id.slice(4));
+                    relGroup = p && p.dataset.group;
+                }
+            }
+            if (relGroup && relGroup !== dragGroup) return false;
+            return true;
+        },
+        // After a drop, re-pair helper TRs with their main row so hist-${id}
+        // stays directly above its strength row and adv-${id} stays below
+        // its cardio row.
+        onEnd() { restoreClusterAdjacency(); }
+    });
+}
+
+function restoreClusterAdjacency() {
+    const tbody = document.getElementById('todayEx');
+    if (!tbody) return;
+    tbody.querySelectorAll('tr[data-kind]').forEach(main => {
+        const hist = document.getElementById('hist-' + main.id);
+        if (hist && main.previousElementSibling !== hist) {
+            tbody.insertBefore(hist, main);
+        }
+        const adv = document.getElementById('adv-' + main.id);
+        if (adv && main.nextElementSibling !== adv) {
+            if (main.nextSibling) tbody.insertBefore(adv, main.nextSibling);
+            else tbody.appendChild(adv);
+        }
+    });
 }
 
 function setWeightDate() {
@@ -672,6 +747,41 @@ function addAllGroup(exs, gr) {
             addExercise(exs[i]);
         }
     }
+}
+
+// filterAccordion narrows the home-page exercise accordion as the user
+// types. Empty query restores the default collapsed state; a non-empty
+// query auto-expands groups that contain at least one match and hides
+// groups with no matches so the user sees a focused result list.
+function filterAccordion(q) {
+    q = (q || "").trim().toLowerCase();
+    const acc = document.getElementById('exAccordion');
+    if (!acc) return;
+    const items = acc.querySelectorAll('.accordion-item');
+    items.forEach(item => {
+        const rows = item.querySelectorAll('.accordion-body .hstack');
+        let matches = 0;
+        rows.forEach(row => {
+            const nameEl = row.querySelector('.exercise-button .text-truncate');
+            const name = nameEl ? nameEl.textContent.trim().toLowerCase() : '';
+            const match = !q || name.includes(q);
+            row.classList.toggle('d-none', !match);
+            if (match) matches++;
+        });
+        item.classList.toggle('d-none', !!q && matches === 0);
+        const collapse = item.querySelector('.accordion-collapse');
+        const btn = item.querySelector('.accordion-button');
+        if (!collapse || !btn) return;
+        if (q && matches > 0) {
+            collapse.classList.add('show');
+            btn.classList.remove('collapsed');
+            btn.setAttribute('aria-expanded', 'true');
+        } else if (!q) {
+            collapse.classList.remove('show');
+            btn.classList.add('collapsed');
+            btn.setAttribute('aria-expanded', 'false');
+        }
+    });
 }
 
 // renderWeightPanel populates the last-weight number, BMI badge (if enabled

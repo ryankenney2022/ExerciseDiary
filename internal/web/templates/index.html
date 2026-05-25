@@ -1,5 +1,6 @@
 {{ define "index.html" }}
 </head>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
 <script src="/fs/public/js/heatmap.js"></script>
 <script src="/fs/public/js/index.js"></script>
 <script src="/fs/public/js/weight-chart.js"></script>
@@ -141,7 +142,14 @@
   {{ end }}
     <div class="row">
         <div class="col-md mb-4">
-            <div class="accordion">
+            <div class="input-group mb-2">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" id="exSearch" class="form-control" placeholder="Search exercises..." autocomplete="off" oninput="filterAccordion(this.value)">
+                <button class="btn btn-outline-secondary" type="button" id="exSearchClear" onclick="document.getElementById('exSearch').value=''; filterAccordion('');" title="Clear">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="accordion" id="exAccordion">
                 {{ range $gr, $grID := .GroupMap }}
                 <div class="accordion-item border-primary">
                     <h2 class="accordion-header">
