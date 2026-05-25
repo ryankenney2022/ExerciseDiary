@@ -62,17 +62,28 @@
           </button>
         </div>
         <div class="card-body" style="overflow-x: auto;">
-          <div class="d-flex justify-content-evenly align-items-center">
-            <div class="col-md-8">
-              <div class="chart-container" style="max-width: fit-content">
-                <canvas id="weight-chart" style="max-height: 100px;"></canvas>
-              </div>
+          <div class="d-flex align-items-center mb-2">
+            <div class="me-3">
+              <div class="display-6 mb-0" id="weightLastNumber">—</div>
+              <div class="text-muted small">last weight</div>
             </div>
-            <div class="col-md-2">
+            <div class="me-3" id="bmiBlock">
+              <div id="bmiValue" class="h4 mb-0">—</div>
+              <div><span id="bmiBadge" class="badge bg-secondary">BMI</span></div>
+            </div>
+            <div class="ms-auto">
               <button class="btn del-set-button" title="Add weight" data-bs-toggle="modal" data-bs-target="#mWeight" onclick='setWeightDate()'>
                 <h4 class="mb-0"><i class="bi bi-window-plus"></i></h4>
               </button>
             </div>
+          </div>
+          <div id="goalBlock" class="small text-muted mb-2 d-none">
+            Goal: <strong id="goalTarget">—</strong> ·
+            <span id="goalDelta"></span>
+            <div class="progress mt-1" style="height:6px"><div id="goalBar" class="progress-bar" role="progressbar" style="width:0%"></div></div>
+          </div>
+          <div class="chart-container" style="max-width: fit-content">
+            <canvas id="weight-chart" style="max-height: 100px;"></canvas>
           </div>
         </div>
       </div>
@@ -283,6 +294,13 @@
     enabled: {{ if eq .CurrentUser.RestTimerOn 1 }}true{{ else }}false{{ end }},
     seconds: {{ if .CurrentUser.RestTimerSeconds }}{{ .CurrentUser.RestTimerSeconds }}{{ else }}90{{ end }}
   };
+  window.bmiCfg = {
+    enabled: {{ if eq .CurrentUser.BMIEnabled 1 }}true{{ else }}false{{ end }},
+    heightInches: {{ .CurrentUser.HeightInches }},
+    goalWeight: parseFloat("{{ .CurrentUser.GoalWeight }}") || 0,
+    unit: "{{ if eq .CurrentUser.DistanceUnit "km" }}kg{{ else }}lb{{ end }}"
+  };
+  renderWeightPanel(window.allWeight = {{ .ExData.Weight }});
   setFormDate(window.allSets);
   generateWeightChart({{ .ExData.Weight }}, {{ .Config.HeatColor }}, -7);
   makeChart({{ .HeatMap }}, {{ .Config.HeatColor }}, window.allSets);

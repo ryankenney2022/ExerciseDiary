@@ -58,10 +58,11 @@ func InsertUser(path string, u models.User) {
 	}
 	now := time.Now().UTC().Format(time.RFC3339)
 	stmt := fmt.Sprintf(
-		`INSERT INTO users (NAME, COLOR, CREATED_AT, SEX, DOB, ALTITUDE, DISTANCE_UNIT, REST_TIMER_ON, REST_TIMER_SECONDS) VALUES ('%s','%s','%s','%s','%s','%s','%s','%d','%d');`,
+		`INSERT INTO users (NAME, COLOR, CREATED_AT, SEX, DOB, ALTITUDE, DISTANCE_UNIT, REST_TIMER_ON, REST_TIMER_SECONDS, HEIGHT_INCHES, BMI_ENABLED, GOAL_WEIGHT) VALUES ('%s','%s','%s','%s','%s','%s','%s','%d','%d','%d','%d',%s);`,
 		quoteStr(u.Name), quoteStr(u.Color), now,
 		quoteStr(u.Sex), quoteStr(u.DOB), quoteStr(u.Altitude), quoteStr(u.DistanceUnit),
 		u.RestTimerOn, u.RestTimerSeconds,
+		u.HeightInches, u.BMIEnabled, u.GoalWeight.String(),
 	)
 	exec(path, stmt)
 }
@@ -78,10 +79,11 @@ func UpdateUser(path string, u models.User) {
 		u.RestTimerSeconds = 90
 	}
 	stmt := fmt.Sprintf(
-		`UPDATE users SET NAME = '%s', COLOR = '%s', SEX = '%s', DOB = '%s', ALTITUDE = '%s', DISTANCE_UNIT = '%s', REST_TIMER_ON = '%d', REST_TIMER_SECONDS = '%d' WHERE ID = '%d';`,
+		`UPDATE users SET NAME = '%s', COLOR = '%s', SEX = '%s', DOB = '%s', ALTITUDE = '%s', DISTANCE_UNIT = '%s', REST_TIMER_ON = '%d', REST_TIMER_SECONDS = '%d', HEIGHT_INCHES = '%d', BMI_ENABLED = '%d', GOAL_WEIGHT = %s WHERE ID = '%d';`,
 		quoteStr(u.Name), quoteStr(u.Color), quoteStr(u.Sex), quoteStr(u.DOB),
 		quoteStr(u.Altitude), quoteStr(u.DistanceUnit),
 		u.RestTimerOn, u.RestTimerSeconds,
+		u.HeightInches, u.BMIEnabled, u.GoalWeight.String(),
 		u.ID,
 	)
 	exec(path, stmt)

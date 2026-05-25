@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/shopspring/decimal"
 
 	"github.com/aceberg/ExerciseDiary/internal/auth"
 	"github.com/aceberg/ExerciseDiary/internal/check"
@@ -51,6 +52,9 @@ func Gui(dirPath, nodePath string) {
 		"prtEventLabel": prtEventLabel,
 		"prtEventBadge": prtEventBadge,
 		"prtCatClass":   prtCatClass,
+		"div":           func(a, b int) int { if b == 0 { return 0 }; return a / b },
+		"mod":           func(a, b int) int { if b == 0 { return 0 }; return a % b },
+		"decSign":       func(d decimal.Decimal) int { return d.Sign() },
 	}
 	templ := template.Must(template.New("").Funcs(funcMap).ParseFS(templFS, "templates/*"))
 	router.SetHTMLTemplate(templ) // templates

@@ -26,8 +26,21 @@ func EnsureSchema(path string) {
 	addColumnIfMissing(path, "users", "DISTANCE_UNIT", "TEXT DEFAULT 'mi'")
 	addColumnIfMissing(path, "users", "REST_TIMER_ON", "INTEGER DEFAULT 0")
 	addColumnIfMissing(path, "users", "REST_TIMER_SECONDS", "INTEGER DEFAULT 90")
+	addColumnIfMissing(path, "users", "HEIGHT_INCHES", "INTEGER DEFAULT 0")
+	addColumnIfMissing(path, "users", "BMI_ENABLED", "INTEGER DEFAULT 0")
+	addColumnIfMissing(path, "users", "GOAL_WEIGHT", "REAL DEFAULT 0")
 
 	addColumnIfMissing(path, "exercises", "KIND", "TEXT DEFAULT 'strength'")
+	// MODE applies to KIND=strength exercises only and selects which input
+	// widgets the workout row shows: "reps" = weight × reps (default),
+	// "timed" = duration only (plank, wall sit, dead hang, etc.).
+	addColumnIfMissing(path, "exercises", "MODE", "TEXT DEFAULT 'reps'")
+
+	// COMPLETED supports the plan-first workout model: rows are added when
+	// the user plans the workout (COMPLETED=0) and flipped to 1 when the
+	// set is actually done. Saving the workout preserves both planned and
+	// completed rows so the plan is visible on re-open.
+	addColumnIfMissing(path, "sets", "COMPLETED", "INTEGER DEFAULT 0")
 
 	addColumnIfMissing(path, "sets", "DURATION_SECONDS", "INTEGER DEFAULT 0")
 	addColumnIfMissing(path, "sets", "DISTANCE_VALUE", "REAL DEFAULT 0")
@@ -43,7 +56,16 @@ func EnsureSchema(path string) {
 	exec(path, `UPDATE users SET ALTITUDE = 'low' WHERE ALTITUDE IS NULL OR ALTITUDE = '';`)
 	exec(path, `UPDATE users SET DISTANCE_UNIT = 'mi' WHERE DISTANCE_UNIT IS NULL OR DISTANCE_UNIT = '';`)
 	exec(path, `UPDATE exercises SET KIND = 'strength' WHERE KIND IS NULL OR KIND = '';`)
+	exec(path, `UPDATE exercises SET MODE = 'reps' WHERE MODE IS NULL OR MODE = '';`)
 	exec(path, `UPDATE sets SET EQUIPMENT = '' WHERE EQUIPMENT IS NULL;`)
+
+	// One-time backfill: pre-existing sets (logged before the plan-first
+	// model existed) were all "completed" by definition — they're past
+	// history. Mark anything with positive weight/reps/duration/distance as
+	// completed so the new UI doesn't render them as ghost-planned rows.
+	exec(path, `UPDATE sets SET COMPLETED = 1
+		WHERE COMPLETED = 0
+		  AND (WEIGHT > 0 OR REPS > 0 OR DURATION_SECONDS > 0 OR DISTANCE_VALUE > 0);`)
 
 	exec(path, `CREATE TABLE IF NOT EXISTS prt_tests (
 		"ID"                INTEGER PRIMARY KEY,

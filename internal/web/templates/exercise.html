@@ -19,6 +19,15 @@
                         </select>
                     </td>
                 </tr>
+                <tr class="ex-strength-only"{{ if eq .OneEx.Kind "cardio" }} style="display:none"{{ end }}>
+                    <td>Mode</td>
+                    <td>
+                        <select name="mode" class="form-select">
+                            <option value="reps"  {{ if ne .OneEx.Mode "timed" }}selected{{ end }}>Reps (weight × reps)</option>
+                            <option value="timed" {{ if eq .OneEx.Mode "timed" }}selected{{ end }}>Timed (duration only — plank, hold)</option>
+                        </select>
+                    </td>
+                </tr>
                 <tr>
                     <td>Group</td>
                     <td>

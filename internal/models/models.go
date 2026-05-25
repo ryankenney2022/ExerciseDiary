@@ -37,9 +37,17 @@ type User struct {
 	DistanceUnit string `db:"DISTANCE_UNIT"` // "mi" (default) or "km" - for cardio entries
 	// Rest-timer preferences: when ON, the workout entry page starts a
 	// floating countdown of RestTimerSeconds every time a strength row
-	// is added (typical between-set cooldown is 60-120 s).
+	// is marked complete (typical between-set cooldown is 60-120 s).
 	RestTimerOn      int `db:"REST_TIMER_ON"`      // 0 = off, 1 = on
 	RestTimerSeconds int `db:"REST_TIMER_SECONDS"` // duration; default 90
+
+	// BMI tracking. HeightInches is stored as inches (UI accepts feet+in
+	// and totals on save). BMIEnabled toggles the home weight panel's BMI
+	// readout. GoalWeight (lb when DistanceUnit=mi, kg when=km) drives
+	// the goal-progress widget; 0 = no goal set.
+	HeightInches int             `db:"HEIGHT_INCHES"`
+	BMIEnabled   int             `db:"BMI_ENABLED"`
+	GoalWeight   decimal.Decimal `db:"GOAL_WEIGHT"`
 }
 
 // PRTTest - one Navy Physical Readiness Test session for a user.
@@ -81,6 +89,8 @@ type Workout struct {
 
 // Exercise - one exercise (shared across users).
 // Kind = "strength" (Weight/Reps apply) or "cardio" (Duration/Distance apply).
+// Mode applies to Kind=strength only: "reps" (weight × reps, default) or
+// "timed" (duration only — plank, wall sit, dead hang).
 type Exercise struct {
 	ID       int             `db:"ID"`
 	Group    string          `db:"GR"`
@@ -93,6 +103,7 @@ type Exercise struct {
 	Weight   decimal.Decimal `db:"WEIGHT"`
 	Reps     int             `db:"REPS"`
 	Kind     string          `db:"KIND"` // "strength" or "cardio"
+	Mode     string          `db:"MODE"` // "reps" or "timed" (strength only)
 }
 
 // Set - one logged entry inside a workout. Most fields are optional:
@@ -114,6 +125,9 @@ type Set struct {
 	MaxHR           int             `db:"MAX_HR"`
 	Calories        int             `db:"CALORIES"`
 	Equipment       string          `db:"EQUIPMENT"`
+	// Plan-first marker. 0 = planned but not done, 1 = actually completed.
+	// Pre-existing rows are backfilled to 1 on first boot of mu.13+.
+	Completed int `db:"COMPLETED"`
 }
 
 // AllExData - all sets and exercises

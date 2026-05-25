@@ -43,12 +43,14 @@
 
     function cancel() {
         if (intervalId) { clearInterval(intervalId); intervalId = null; }
+        if (hideTimeoutId) { clearTimeout(hideTimeoutId); hideTimeoutId = null; }
         if (chipEl) chipEl.classList.add('d-none');
     }
 
     function start(seconds) {
         ensureChip();
         if (intervalId) clearInterval(intervalId);
+        if (hideTimeoutId) { clearTimeout(hideTimeoutId); hideTimeoutId = null; }
         remaining = seconds;
         chipEl.classList.remove('d-none');
         chipEl.classList.remove('rest-timer-done');
@@ -68,10 +70,18 @@
         }, 250);
     }
 
+    let hideTimeoutId = null;
     function fire() {
         if (chipEl) chipEl.classList.add('rest-timer-done');
         try { ding(); } catch (e) {}
         try { if (navigator.vibrate) navigator.vibrate(200); } catch (e) {}
+        // Hide chip 5s after firing so it doesn't loiter, but cancel any
+        // pending hide if a new timer starts in the meantime (start() clears).
+        if (hideTimeoutId) clearTimeout(hideTimeoutId);
+        hideTimeoutId = setTimeout(() => {
+            if (chipEl) chipEl.classList.add('d-none');
+            hideTimeoutId = null;
+        }, 5000);
     }
 
     // ding: minimal WebAudio beep. Browsers require a prior user gesture before

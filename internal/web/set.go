@@ -50,6 +50,9 @@ func setHandler(c *gin.Context) {
 	maxHRs := formMap["max_hr"]
 	calories := formMap["calories"]
 	equipments := formMap["equipment"]
+	// Plan-first marker. The form always submits "0" or "1" per row (a
+	// hidden input mirrors the visible checkbox) so indices stay aligned.
+	completeds := formMap["completed"]
 
 	var oneSet models.Set
 	var formData []models.Set
@@ -84,6 +87,9 @@ func setHandler(c *gin.Context) {
 		}
 		if i < len(equipments) {
 			oneSet.Equipment = equipments[i]
+		}
+		if i < len(completeds) && completeds[i] == "1" {
+			oneSet.Completed = 1
 		}
 		formData = append(formData, oneSet)
 	}

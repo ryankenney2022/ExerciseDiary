@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/shopspring/decimal"
 
 	"github.com/aceberg/ExerciseDiary/internal/db"
 	"github.com/aceberg/ExerciseDiary/internal/models"
@@ -55,6 +56,27 @@ func saveUserHandler(c *gin.Context) {
 	}
 	if s, err := strconv.Atoi(c.PostForm("rest_timer_seconds")); err == nil && s > 0 {
 		u.RestTimerSeconds = s
+	}
+
+	// Height: accept either total inches OR feet + inches; the form posts
+	// both and we sum (a ft value of N adds N*12 to inches). Total is
+	// clamped to a sane range so a fat-fingered entry doesn't poison BMI.
+	feet, _ := strconv.Atoi(c.PostForm("height_feet"))
+	inches, _ := strconv.Atoi(c.PostForm("height_inches"))
+	total := feet*12 + inches
+	if total < 0 {
+		total = 0
+	}
+	if total > 108 { // 9 ft — anything beyond this is data error
+		total = 108
+	}
+	u.HeightInches = total
+
+	if c.PostForm("bmi_enabled") == "1" {
+		u.BMIEnabled = 1
+	}
+	if g, err := decimal.NewFromString(c.PostForm("goal_weight")); err == nil && g.Sign() >= 0 {
+		u.GoalWeight = g
 	}
 
 	idStr := c.PostForm("id")

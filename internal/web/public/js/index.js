@@ -19,6 +19,16 @@ function kindForName(name) {
     return "strength";
 }
 
+// Find the strength MODE of an exercise by name. Returns "timed" for
+// plank-style holds; "reps" for everything else (default).
+function modeForName(name) {
+    const all = window.allExercises || [];
+    for (const e of all) {
+        if (e.Name === name) return (e.Mode === "timed") ? "timed" : "reps";
+    }
+    return "reps";
+}
+
 // Find the Group attribute of an exercise by name. Falls back to "Other" so
 // rows whose master exercise was deleted still group somewhere sensible.
 function groupForName(name) {
@@ -48,9 +58,13 @@ function addExercise(obj) {
     const name = obj.Name || "";
     const kind = obj.Kind || kindForName(name);
     const group = obj.Group || groupForName(name);
-    const html = (kind === "cardio")
-        ? renderCardioRow(id, name, obj)
-        : renderStrengthRow(id, name, obj);
+    // Mode only meaningful for strength; cardio rows ignore it.
+    const mode = (kind === "strength") ? (obj.Mode || modeForName(name)) : "reps";
+
+    let html;
+    if (kind === "cardio")        html = renderCardioRow(id, name, obj);
+    else if (mode === "timed")    html = renderTimedStrengthRow(id, name, obj);
+    else                          html = renderStrengthRow(id, name, obj);
 
     const tbody = document.getElementById('todayEx');
     const tmp = document.createElement('tbody');
@@ -62,18 +76,18 @@ function addExercise(obj) {
 
     insertClusterGrouped(tbody, newRows, group, name);
 
+    // Apply initial completed state from saved data.
+    if (obj.Completed === 1 || obj.Completed === "1") {
+        const mainTr = newRows.find(r => !r.id.startsWith('hist-') && !r.id.startsWith('adv-'));
+        if (mainTr) applyCompletedState(mainTr, true, /*silent*/true);
+    }
+
     // Fire input on the weight field once so plate hint populates without
     // the user having to type.
     const mainTr = newRows.find(r => !r.id.startsWith('hist-') && !r.id.startsWith('adv-'));
     if (mainTr) {
         const w = mainTr.querySelector('input[name="weight"]');
         if (w) w.dispatchEvent(new Event('input', { bubbles: true }));
-    }
-
-    // Trigger a rest timer if the user has it enabled (rest-timer.js wires
-    // window.onStrengthSetAdded; absent otherwise).
-    if (kind === "strength" && typeof window.onStrengthSetAdded === "function") {
-        window.onStrengthSetAdded();
     }
 }
 
@@ -85,8 +99,19 @@ function insertClusterGrouped(tbody, newRows, group, name) {
         header = document.createElement('tr');
         header.className = 'todayex-group-header';
         header.dataset.group = group;
-        header.innerHTML = `<td colspan="5" class="todayex-group-title"><strong>${escapeHTMLAttr(group)}</strong></td>`;
+        const color = colorForGroup(group);
+        header.style.setProperty('--group-color', color);
+        const escGroup = escapeHTMLAttr(group);
+        header.innerHTML = `<td colspan="5" class="todayex-group-title" onclick="toggleGroupCollapse('${escGroup.replaceAll("'","\\'")}')">
+            <i class="bi bi-chevron-down todayex-group-chevron"></i>
+            <span class="todayex-group-swatch" style="background:${color}"></span>
+            <strong>${escGroup}</strong>
+        </td>`;
         tbody.appendChild(header);
+        // Restore collapsed state from sessionStorage.
+        if (sessionStorage.getItem('todayexCollapsed:' + group) === '1') {
+            header.classList.add('todayex-group-collapsed');
+        }
     }
 
     // 1) Prefer to insert right after the LAST same-name row in this group.
@@ -110,6 +135,11 @@ function insertClusterGrouped(tbody, newRows, group, name) {
     } else {
         newRows.forEach(tr => tbody.appendChild(tr));
     }
+
+    // If the group is currently collapsed, hide the new rows immediately.
+    if (header.classList.contains('todayex-group-collapsed')) {
+        newRows.forEach(tr => tr.classList.add('d-none'));
+    }
 }
 
 // insertAfterCluster: insert newRows immediately after the LAST TR of the
@@ -131,6 +161,64 @@ function insertAfterCluster(tbody, anchorMainTr, newRows) {
 function cssEsc(s) {
     if (window.CSS && typeof CSS.escape === "function") return CSS.escape(s);
     return String(s).replace(/[^a-zA-Z0-9_-]/g, c => "\\" + c);
+}
+
+// Color-code group headers. Common group names get a fixed accent; anything
+// else falls back to a hash-derived hue so multiple custom groups stay
+// distinct from each other. Returns an HSL color string usable inline.
+const FIXED_GROUP_COLORS = {
+    'Push':        '#fd7e14',
+    'Pull':        '#20c997',
+    'Legs':        '#6610f2',
+    'Legs & Posterior Chain': '#6610f2',
+    'Shoulders':   '#ffc107',
+    'Triceps':     '#d63384',
+    'Biceps':      '#0dcaf0',
+    'Chest':       '#dc3545',
+    'Back':        '#198754',
+    'Abs':         '#0d6efd',
+    'Cardio (PRT)':'#0d6efd',
+    'Cardio':      '#0d6efd',
+    'Other':       '#6c757d'
+};
+function colorForGroup(name) {
+    if (FIXED_GROUP_COLORS[name]) return FIXED_GROUP_COLORS[name];
+    // hash → hue
+    let h = 0;
+    for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffff;
+    return `hsl(${h % 360}, 55%, 55%)`;
+}
+
+// toggleGroupCollapse hides/shows all data rows of a group section. The
+// chevron in the header rotates and the collapsed state persists in
+// sessionStorage so the user's view choice survives row re-renders.
+function toggleGroupCollapse(group) {
+    const tbody = document.getElementById('todayEx');
+    if (!tbody) return;
+    const header = tbody.querySelector(`tr.todayex-group-header[data-group="${cssEsc(group)}"]`);
+    if (!header) return;
+    const willCollapse = !header.classList.contains('todayex-group-collapsed');
+    header.classList.toggle('todayex-group-collapsed', willCollapse);
+    // Show/hide every TR that belongs to this group (data rows + helper TRs).
+    tbody.querySelectorAll(`tr[data-group="${cssEsc(group)}"]:not(.todayex-group-header), tr.todayex-hist-row, tr[id^="adv-"]`)
+        .forEach(tr => {
+            // We need to filter helper rows that belong to a main row in THIS group.
+            if (tr.classList.contains('todayex-hist-row')) {
+                const parent = document.getElementById(tr.dataset.parent);
+                if (!parent || parent.dataset.group !== group) return;
+            } else if (tr.id && tr.id.startsWith('adv-')) {
+                const parent = document.getElementById(tr.id.slice(4));
+                if (!parent || parent.dataset.group !== group) return;
+            } else if (tr.dataset.group !== group) {
+                return;
+            }
+            if (willCollapse) tr.classList.add('d-none');
+            else tr.classList.remove('d-none');
+        });
+    try {
+        if (willCollapse) sessionStorage.setItem('todayexCollapsed:' + group, '1');
+        else sessionStorage.removeItem('todayexCollapsed:' + group);
+    } catch (e) {}
 }
 
 function renderStrengthRow(rowId, name, obj) {
@@ -171,6 +259,9 @@ function renderStrengthRow(rowId, name, obj) {
         <input type="hidden" name="equipment" value="">
     </td><td class="todayex-del">
         <div class="vstack gap-1">
+            <button class="btn del-set-button p-1 todayex-complete-btn" type="button" title="Mark set complete" onclick="toggleCompleteRow(${rowId})">
+                <i class="bi bi-check2-square"></i>
+            </button>
             <button class="btn del-set-button p-1" type="button" title="Repeat this set" onclick="repeatRow(${rowId})">
                 <i class="bi bi-arrow-repeat"></i>
             </button>
@@ -178,7 +269,159 @@ function renderStrengthRow(rowId, name, obj) {
                 <i class="bi bi-x-square"></i>
             </button>
         </div>
+        <input type="hidden" name="completed" value="0">
     </td></tr>`;
+}
+
+// renderTimedStrengthRow renders a strength row whose mode is "timed" — no
+// weight or reps, just a duration field driven by Start/Stop buttons (plank,
+// wall sit, dead hang). The duration value is stored in DURATION_SECONDS on
+// the set (same column cardio uses). Time is also user-editable directly.
+function renderTimedStrengthRow(rowId, name, obj) {
+    const safeName = escapeHTMLAttr(name);
+    const dur = parseInt(obj.DurationSeconds || 0, 10);
+    const safeDur = escapeHTMLAttr(secondsToMMSS(dur));
+    const safeNote = escapeHTMLAttr(obj.Note || "");
+    const chips = renderTimedHistoryChips(rowId, name);
+
+    return `<tr id="hist-${rowId}" class="todayex-hist-row" data-parent="${rowId}">
+        <td colspan="5" class="py-1 px-2 bg-body-tertiary small">
+            <div class="d-flex flex-wrap gap-1 align-items-center">${chips}</div>
+        </td>
+    </tr>
+    <tr id="${rowId}" data-kind="strength" data-mode="timed">
+    <td class="todayex-name">
+        <input name="name" type="text" class="form-control todayex-name-input" value="${safeName}">
+    </td><td class="todayex-weight">
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-sm btn-success" onclick="timedStrengthStart(${rowId})"><i class="bi bi-play-fill"></i> Start</button>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="timedStrengthStop(${rowId})"><i class="bi bi-stop-fill"></i> Stop</button>
+        </div>
+        <input type="hidden" name="weight" value="0">
+    </td><td class="todayex-reps">
+        <input name="duration_mmss" type="text" pattern="^\\d+:[0-5]\\d$" class="form-control todayex-timed-mmss" placeholder="mm:ss" value="${safeDur}">
+        <input type="hidden" name="reps" value="0">
+    </td><td class="todayex-note d-none d-md-table-cell">
+        <input name="note" type="text" class="form-control" placeholder="(optional)" value="${safeNote}">
+        <input type="hidden" name="distance_value" value="0">
+        <input type="hidden" name="avg_hr" value="0">
+        <input type="hidden" name="max_hr" value="0">
+        <input type="hidden" name="calories" value="0">
+        <input type="hidden" name="equipment" value="">
+    </td><td class="todayex-del">
+        <div class="vstack gap-1">
+            <button class="btn del-set-button p-1 todayex-complete-btn" type="button" title="Mark set complete" onclick="toggleCompleteRow(${rowId})">
+                <i class="bi bi-check2-square"></i>
+            </button>
+            <button class="btn del-set-button p-1" type="button" title="Repeat this set" onclick="repeatRow(${rowId})">
+                <i class="bi bi-arrow-repeat"></i>
+            </button>
+            <button class="btn del-set-button p-1" type="button" title="Delete" onclick="delExercise(${rowId})">
+                <i class="bi bi-x-square"></i>
+            </button>
+        </div>
+        <input type="hidden" name="completed" value="0">
+    </td></tr>`;
+}
+
+// Per-row timed-strength timer state, keyed by rowId.
+const timedTimers = {};
+
+function timedStrengthStart(rowId) {
+    const row = document.getElementById(rowId);
+    if (!row) return;
+    const completed = row.dataset.completed === "1";
+    if (completed) {
+        if (!confirm("This set is already marked complete. Restart the timer and clear the recorded time?")) return;
+        applyCompletedState(row, false);
+    }
+    // Cancel any prior interval for this row (silent reset before complete).
+    if (timedTimers[rowId]) clearInterval(timedTimers[rowId].id);
+    const mmss = row.querySelector('input[name="duration_mmss"]');
+    if (mmss) mmss.value = "";
+    const startedAt = Date.now();
+    const tick = () => {
+        const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+        if (mmss) mmss.value = secondsToMMSS(elapsed);
+    };
+    timedTimers[rowId] = { id: setInterval(tick, 250), startedAt };
+    if (mmss) mmss.value = "0:00";
+}
+
+function timedStrengthStop(rowId) {
+    const t = timedTimers[rowId];
+    if (!t) return;
+    clearInterval(t.id);
+    delete timedTimers[rowId];
+    const row = document.getElementById(rowId);
+    if (!row) return;
+    const elapsed = Math.floor((Date.now() - t.startedAt) / 1000);
+    const mmss = row.querySelector('input[name="duration_mmss"]');
+    if (mmss) mmss.value = secondsToMMSS(elapsed);
+}
+
+// renderTimedHistoryChips returns inline HTML chips of recent durations for a
+// timed-strength exercise (e.g. plank 1:30, 1:45). Click to fill.
+function renderTimedHistoryChips(rowId, name) {
+    const all = window.allSets || [];
+    const out = [];
+    const seen = new Set();
+    for (let i = all.length - 1; i >= 0 && out.length < 5; i--) {
+        const s = all[i];
+        if (s.Name !== name) continue;
+        if (s.Completed !== undefined && s.Completed !== 1 && s.Completed !== "1") continue;
+        const d = parseInt(s.DurationSeconds || 0, 10);
+        if (!d) continue;
+        const key = String(d);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push(d);
+    }
+    if (!out.length) {
+        return `<span class="text-muted">No prior holds for <em>${escapeHTMLAttr(name)}</em></span>`;
+    }
+    const chips = out.map(d => {
+        const label = secondsToMMSS(d);
+        return `<button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="fillTimedRow(${rowId}, ${d})">${label}</button>`;
+    }).join("");
+    return `<span class="text-muted me-1">Recent:</span>${chips}`;
+}
+
+function fillTimedRow(rowId, seconds) {
+    const row = document.getElementById(rowId);
+    if (!row) return;
+    const mmss = row.querySelector('input[name="duration_mmss"]');
+    if (mmss) mmss.value = secondsToMMSS(seconds);
+}
+
+// applyCompletedState (de)applies the .todayex-completed class, flips the
+// hidden completed field, and switches the check icon. When silent=false and
+// we just transitioned to completed for a strength row, fires the rest timer.
+function applyCompletedState(mainTr, completed, silent) {
+    if (!mainTr) return;
+    mainTr.dataset.completed = completed ? "1" : "0";
+    mainTr.classList.toggle("todayex-completed", completed);
+    const hist = document.getElementById('hist-' + mainTr.id);
+    if (hist) hist.classList.toggle("todayex-completed", completed);
+    const hidden = mainTr.querySelector('input[name="completed"]');
+    if (hidden) hidden.value = completed ? "1" : "0";
+    const btn = mainTr.querySelector('.todayex-complete-btn i');
+    if (btn) btn.className = completed ? "bi bi-check-square-fill" : "bi bi-check2-square";
+    if (completed && !silent && mainTr.dataset.kind === "strength") {
+        if (typeof window.onStrengthSetAdded === "function") {
+            window.onStrengthSetAdded();
+        }
+    }
+}
+
+function toggleCompleteRow(rowId) {
+    const row = document.getElementById(rowId);
+    if (!row) return;
+    // Stop any running timed-strength interval before flipping state.
+    if (timedTimers[rowId]) {
+        timedStrengthStop(rowId);
+    }
+    applyCompletedState(row, row.dataset.completed !== "1");
 }
 
 // renderHistoryChips returns the inline HTML for the most-recent N sets of an
@@ -213,6 +456,9 @@ function lastNStrengthSetsFor(name, n) {
     for (let i = all.length - 1; i >= 0 && out.length < n; i--) {
         const s = all[i];
         if (s.Name !== name) continue;
+        // Only suggest completed past sets — planned-but-skipped rows would
+        // mislead with weights the user never actually lifted.
+        if (s.Completed !== undefined && s.Completed !== 1 && s.Completed !== "1") continue;
         const key = `${s.Weight}|${s.Reps}`;
         if (seen.has(key)) continue;
         seen.add(key);
@@ -311,7 +557,10 @@ function renderCardioRow(rowId, name, obj) {
     </td><td class="todayex-note d-none d-md-table-cell">
         <input name="note" type="text" class="form-control" placeholder="(optional)" value="${safeNote}">
     </td><td class="todayex-del">
-        <div class="hstack gap-1 justify-content-end">
+        <div class="vstack gap-1 align-items-end">
+            <button class="btn del-set-button p-1 todayex-complete-btn" type="button" title="Mark complete" onclick="toggleCompleteRow(${rowId})">
+                <i class="bi bi-check2-square"></i>
+            </button>
             <button class="btn del-set-button p-1" type="button" title="Advanced (HR / cal${isBike ? " / bike" : ""})" onclick="toggleCardioAdvanced(${rowId})">
                 <i class="bi bi-sliders"></i>
             </button>
@@ -319,6 +568,7 @@ function renderCardioRow(rowId, name, obj) {
                 <i class="bi bi-x-square"></i>
             </button>
         </div>
+        <input type="hidden" name="completed" value="0">
     </td></tr>
     <tr id="adv-${rowId}" class="cardio-advanced ${showAdvanced ? "" : "d-none"}" data-parent="${rowId}">
         <td colspan="5">
@@ -422,6 +672,84 @@ function addAllGroup(exs, gr) {
             addExercise(exs[i]);
         }
     }
+}
+
+// renderWeightPanel populates the last-weight number, BMI badge (if enabled
+// and height is set), and goal-progress block (if a goal weight is set).
+// Called once from the inline init script with the current user's weight
+// history. Safe with an empty array.
+function renderWeightPanel(weight) {
+    const cfg = window.bmiCfg || { enabled: false, heightInches: 0, goalWeight: 0, unit: "lb" };
+    const last = (weight && weight.length) ? weight[weight.length - 1] : null;
+    const lastVal = last ? parseFloat(last.Weight) : 0;
+
+    const numEl = document.getElementById('weightLastNumber');
+    if (numEl) {
+        numEl.textContent = lastVal ? (Math.round(lastVal * 10) / 10) : '—';
+    }
+
+    const bmiBlock = document.getElementById('bmiBlock');
+    const bmiVal = document.getElementById('bmiValue');
+    const bmiBadge = document.getElementById('bmiBadge');
+    if (bmiBlock && bmiVal && bmiBadge) {
+        if (!cfg.enabled || !cfg.heightInches || !lastVal) {
+            bmiBlock.style.display = 'none';
+        } else {
+            bmiBlock.style.display = '';
+            let bmi;
+            if (cfg.unit === 'kg') {
+                // metric: kg / m^2
+                const meters = cfg.heightInches * 0.0254;
+                bmi = lastVal / (meters * meters);
+            } else {
+                // imperial: lb / in^2 * 703
+                bmi = (lastVal / (cfg.heightInches * cfg.heightInches)) * 703;
+            }
+            bmi = Math.round(bmi * 10) / 10;
+            bmiVal.textContent = bmi.toFixed(1);
+            const cat = bmiCategory(bmi);
+            bmiBadge.textContent = cat.label;
+            bmiBadge.className = 'badge bg-' + cat.color;
+        }
+    }
+
+    const goalBlock = document.getElementById('goalBlock');
+    const goalTarget = document.getElementById('goalTarget');
+    const goalDelta = document.getElementById('goalDelta');
+    const goalBar = document.getElementById('goalBar');
+    if (goalBlock && goalTarget && goalDelta && goalBar) {
+        if (!cfg.goalWeight || !lastVal || !weight || !weight.length) {
+            goalBlock.classList.add('d-none');
+        } else {
+            goalBlock.classList.remove('d-none');
+            goalTarget.textContent = cfg.goalWeight + ' ' + cfg.unit;
+            const delta = Math.round((lastVal - cfg.goalWeight) * 10) / 10;
+            if (Math.abs(delta) < 0.05) {
+                goalDelta.innerHTML = '<span class="text-success">at goal</span>';
+            } else if (delta > 0) {
+                goalDelta.innerHTML = '<span class="text-warning">' + delta + ' ' + cfg.unit + ' to go (cut)</span>';
+            } else {
+                goalDelta.innerHTML = '<span class="text-warning">' + Math.abs(delta) + ' ' + cfg.unit + ' to go (gain)</span>';
+            }
+            // Progress: assume the starting weight is the FIRST entry. Pct
+            // toward goal = (start - current) / (start - goal), clamped.
+            const start = parseFloat(weight[0].Weight) || lastVal;
+            const denom = (start - cfg.goalWeight);
+            let pct = 0;
+            if (denom !== 0) {
+                pct = Math.max(0, Math.min(100, ((start - lastVal) / denom) * 100));
+            }
+            goalBar.style.width = pct + '%';
+            goalBar.className = 'progress-bar bg-' + (pct >= 100 ? 'success' : 'primary');
+        }
+    }
+}
+
+function bmiCategory(bmi) {
+    if (bmi < 18.5)  return { label: 'Underweight', color: 'info' };
+    if (bmi < 25.0)  return { label: 'Healthy',     color: 'success' };
+    if (bmi < 30.0)  return { label: 'Overweight',  color: 'warning' };
+    return { label: 'Obesity', color: 'danger' };
 }
 
 // Weight card visibility (persisted in localStorage)

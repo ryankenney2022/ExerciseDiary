@@ -56,6 +56,10 @@ func saveExerciseHandler(c *gin.Context) {
 	if oneEx.Kind != "cardio" {
 		oneEx.Kind = "strength"
 	}
+	oneEx.Mode = c.PostForm("mode")
+	if oneEx.Mode != "timed" {
+		oneEx.Mode = "reps"
+	}
 
 	id := c.PostForm("id")
 	weight := c.PostForm("weight")

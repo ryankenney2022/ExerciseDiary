@@ -68,17 +68,21 @@ func InsertEx(path string, ex models.Exercise) {
 	if ex.Kind == "" {
 		ex.Kind = "strength"
 	}
+	if ex.Mode == "" {
+		ex.Mode = "reps"
+	}
 
-	sqlStatement := `INSERT INTO exercises (GR, PLACE, NAME, DESCR, IMAGE, VIDEO_URL, COLOR, WEIGHT, REPS, KIND)
-	VALUES ('%s','%s','%s','%s','%s','%s','%s','%v','%d','%s');`
+	sqlStatement := `INSERT INTO exercises (GR, PLACE, NAME, DESCR, IMAGE, VIDEO_URL, COLOR, WEIGHT, REPS, KIND, MODE)
+	VALUES ('%s','%s','%s','%s','%s','%s','%s','%v','%d','%s','%s');`
 
 	ex.Group = quoteStr(ex.Group)
 	ex.Name = quoteStr(ex.Name)
 	ex.Descr = quoteStr(ex.Descr)
 	ex.VideoURL = quoteStr(ex.VideoURL)
 	ex.Kind = quoteStr(ex.Kind)
+	ex.Mode = quoteStr(ex.Mode)
 
-	sqlStatement = fmt.Sprintf(sqlStatement, ex.Group, ex.Place, ex.Name, ex.Descr, ex.Image, ex.VideoURL, ex.Color, ex.Weight, ex.Reps, ex.Kind)
+	sqlStatement = fmt.Sprintf(sqlStatement, ex.Group, ex.Place, ex.Name, ex.Descr, ex.Image, ex.VideoURL, ex.Color, ex.Weight, ex.Reps, ex.Kind, ex.Mode)
 
 	exec(path, sqlStatement)
 }
@@ -87,8 +91,8 @@ func InsertEx(path string, ex models.Exercise) {
 func InsertSet(path string, ex models.Set) {
 
 	sqlStatement := `INSERT INTO sets (WORKOUT_ID, DATE, NAME, COLOR, WEIGHT, REPS, NOTE,
-	    DURATION_SECONDS, DISTANCE_VALUE, AVG_HR, MAX_HR, CALORIES, EQUIPMENT)
-	VALUES ('%d','%s','%s','%s','%v','%d','%s','%d','%v','%d','%d','%d','%s');`
+	    DURATION_SECONDS, DISTANCE_VALUE, AVG_HR, MAX_HR, CALORIES, EQUIPMENT, COMPLETED)
+	VALUES ('%d','%s','%s','%s','%v','%d','%s','%d','%v','%d','%d','%d','%s','%d');`
 
 	ex.Name = quoteStr(ex.Name)
 	ex.Note = quoteStr(ex.Note)
@@ -96,7 +100,7 @@ func InsertSet(path string, ex models.Set) {
 
 	sqlStatement = fmt.Sprintf(sqlStatement,
 		ex.WorkoutID, ex.Date, ex.Name, ex.Color, ex.Weight, ex.Reps, ex.Note,
-		ex.DurationSeconds, ex.DistanceValue, ex.AvgHR, ex.MaxHR, ex.Calories, ex.Equipment,
+		ex.DurationSeconds, ex.DistanceValue, ex.AvgHR, ex.MaxHR, ex.Calories, ex.Equipment, ex.Completed,
 	)
 
 	exec(path, sqlStatement)

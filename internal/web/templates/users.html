@@ -71,6 +71,32 @@
                         <label class="form-label">Rest duration (seconds)</label>
                         <input name="rest_timer_seconds" type="number" min="5" step="5" class="form-control" value="{{ if .RestTimerSeconds }}{{ .RestTimerSeconds }}{{ else }}90{{ end }}">
                       </div>
+
+                      <div class="col-md-12">
+                        <hr class="my-1">
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" name="bmi_enabled" value="1" id="bmiOn{{ .ID }}" {{ if eq .BMIEnabled 1 }}checked{{ end }}>
+                          <label class="form-check-label" for="bmiOn{{ .ID }}">
+                            Track BMI on the weight panel
+                          </label>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Height</label>
+                        <div class="input-group">
+                          <input name="height_feet" type="number" min="0" max="9" class="form-control" placeholder="ft"
+                                 value="{{ if .HeightInches }}{{ div .HeightInches 12 }}{{ end }}">
+                          <span class="input-group-text">ft</span>
+                          <input name="height_inches" type="number" min="0" max="11" class="form-control" placeholder="in"
+                                 value="{{ if .HeightInches }}{{ mod .HeightInches 12 }}{{ end }}">
+                          <span class="input-group-text">in</span>
+                        </div>
+                        <div class="form-text">Or enter inches only in the "in" field.</div>
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Goal weight ({{ if eq .DistanceUnit "km" }}kg{{ else }}lb{{ end }}, optional)</label>
+                        <input name="goal_weight" type="number" step="any" min="0" class="form-control" value="{{ if gt (decSign .GoalWeight) 0 }}{{ .GoalWeight }}{{ end }}" placeholder="e.g. 200">
+                      </div>
                     </div>
                     <div class="mt-3 d-flex justify-content-between">
                       <button type="submit" class="btn btn-primary">Save</button>
@@ -142,6 +168,24 @@
             <div class="mb-3">
               <label class="form-label">Rest duration (seconds)</label>
               <input name="rest_timer_seconds" type="number" min="5" step="5" class="form-control" value="90">
+            </div>
+            <div class="mb-3 form-check">
+              <input class="form-check-input" type="checkbox" name="bmi_enabled" value="1" id="bmiOnNew">
+              <label class="form-check-label" for="bmiOnNew">Track BMI on the weight panel</label>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Height (optional)</label>
+              <div class="input-group">
+                <input name="height_feet" type="number" min="0" max="9" class="form-control" placeholder="ft">
+                <span class="input-group-text">ft</span>
+                <input name="height_inches" type="number" min="0" max="11" class="form-control" placeholder="in">
+                <span class="input-group-text">in</span>
+              </div>
+              <div class="form-text">Or enter inches only in the "in" field.</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Goal weight (optional)</label>
+              <input name="goal_weight" type="number" step="any" min="0" class="form-control" placeholder="e.g. 200">
             </div>
             <button type="submit" class="btn btn-primary">Add</button>
           </form>
