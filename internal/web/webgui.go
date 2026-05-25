@@ -33,6 +33,7 @@ func Gui(dirPath, nodePath string) {
 	db.Create(appConfig.DBPath)
 	db.EnsureSchema(appConfig.DBPath)
 	db.MigrateMultiUser(appConfig.DBPath)
+	db.SeedCardioExercises(appConfig.DBPath)
 	recomputeAllPRTScores(appConfig.DBPath)
 
 	address := appConfig.Host + ":" + appConfig.Port

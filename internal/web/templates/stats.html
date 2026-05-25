@@ -5,6 +5,29 @@
 <link rel="stylesheet" type="text/css" href="/fs/public/css/index.css" />
 <body>
     <div class="container-lg mt-4">
+        {{ if .CardioSummary.SessionCount }}
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <div class="card border-info">
+                    <div class="card-header">Cardio — last 7 days</div>
+                    <div class="card-body d-flex flex-wrap gap-4 align-items-center">
+                        <div>
+                            <div class="display-6 mb-0">{{ .CardioSummary.TotalMinutes }}</div>
+                            <div class="text-muted small">total minutes</div>
+                        </div>
+                        <div>
+                            <div class="display-6 mb-0">{{ .CardioSummary.TotalDist }}</div>
+                            <div class="text-muted small">total {{ .CardioSummary.Unit }}</div>
+                        </div>
+                        <div>
+                            <div class="display-6 mb-0">{{ .CardioSummary.SessionCount }}</div>
+                            <div class="text-muted small">cardio sets</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{ end }}
         <div class="row">
             <div class="col-md-4 mb-4">
                 <div class="card border-primary">

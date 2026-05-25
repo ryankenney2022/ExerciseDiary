@@ -28,6 +28,7 @@ func saveUserHandler(c *gin.Context) {
 	sex := c.PostForm("sex")
 	dob := c.PostForm("dob")
 	altitude := c.PostForm("altitude")
+	distanceUnit := c.PostForm("distance_unit")
 	idStr := c.PostForm("id")
 
 	if name == "" {
@@ -43,12 +44,15 @@ func saveUserHandler(c *gin.Context) {
 	if sex != "M" && sex != "F" {
 		sex = ""
 	}
+	if distanceUnit != "km" {
+		distanceUnit = "mi"
+	}
 
 	id, _ := strconv.Atoi(idStr)
 	if id > 0 {
-		db.UpdateUser(appConfig.DBPath, id, name, color, sex, dob, altitude)
+		db.UpdateUser(appConfig.DBPath, id, name, color, sex, dob, altitude, distanceUnit)
 	} else {
-		db.InsertUser(appConfig.DBPath, name, color, sex, dob, altitude)
+		db.InsertUser(appConfig.DBPath, name, color, sex, dob, altitude, distanceUnit)
 	}
 	c.Redirect(http.StatusFound, "/users/")
 }

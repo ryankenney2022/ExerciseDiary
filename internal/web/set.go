@@ -9,6 +9,7 @@ import (
 
 	"github.com/aceberg/ExerciseDiary/internal/db"
 	"github.com/aceberg/ExerciseDiary/internal/models"
+	"github.com/aceberg/ExerciseDiary/internal/prt"
 )
 
 func setHandler(c *gin.Context) {
@@ -41,6 +42,15 @@ func setHandler(c *gin.Context) {
 	reps := formMap["reps"]
 	notes := formMap["note"]
 
+	// Cardio fields (added in mu.10). Strength rows submit zero/empty values
+	// for these so the indices stay aligned with `names`.
+	durationsMMSS := formMap["duration_mmss"]
+	distances := formMap["distance_value"]
+	avgHRs := formMap["avg_hr"]
+	maxHRs := formMap["max_hr"]
+	calories := formMap["calories"]
+	equipments := formMap["equipment"]
+
 	var oneSet models.Set
 	var formData []models.Set
 	for i := 0; i < len(names); i++ {
@@ -56,6 +66,24 @@ func setHandler(c *gin.Context) {
 		}
 		if i < len(notes) {
 			oneSet.Note = notes[i]
+		}
+		if i < len(durationsMMSS) {
+			oneSet.DurationSeconds = prt.ParseMMSS(durationsMMSS[i])
+		}
+		if i < len(distances) {
+			oneSet.DistanceValue, _ = decimal.NewFromString(distances[i])
+		}
+		if i < len(avgHRs) {
+			oneSet.AvgHR, _ = strconv.Atoi(avgHRs[i])
+		}
+		if i < len(maxHRs) {
+			oneSet.MaxHR, _ = strconv.Atoi(maxHRs[i])
+		}
+		if i < len(calories) {
+			oneSet.Calories, _ = strconv.Atoi(calories[i])
+		}
+		if i < len(equipments) {
+			oneSet.Equipment = equipments[i]
 		}
 		formData = append(formData, oneSet)
 	}

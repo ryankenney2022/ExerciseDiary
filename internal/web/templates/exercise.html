@@ -11,6 +11,15 @@
             <form action="/exercise/" method="post">
                 <input name="id" type="hidden" value="{{ .OneEx.ID }}">
                 <tr>
+                    <td>Kind</td>
+                    <td>
+                        <select name="kind" class="form-select">
+                            <option value="strength" {{ if ne .OneEx.Kind "cardio" }}selected{{ end }}>Strength (weight × reps)</option>
+                            <option value="cardio"   {{ if eq .OneEx.Kind "cardio" }}selected{{ end }}>Cardio (distance + duration)</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
                     <td>Group</td>
                     <td>
                         <input name="group" type="text" class="form-control" list="exGroupsList"

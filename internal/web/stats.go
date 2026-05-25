@@ -1,9 +1,9 @@
 package web
 
 import (
-	// "log"
 	"net/http"
 	"sort"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -39,6 +39,32 @@ func statsHandler(c *gin.Context) {
 		return guiData.ExData.Sets[i].Date < guiData.ExData.Sets[j].Date
 	})
 
+	guiData.CardioSummary = computeCardioSummary(guiData.ExData.Sets, user)
+
 	c.HTML(http.StatusOK, "header.html", guiData)
 	c.HTML(http.StatusOK, "stats.html", guiData)
+}
+
+// computeCardioSummary tallies the user's cardio activity from the last 7
+// days (inclusive of today). A "cardio" set is any set with a positive
+// DurationSeconds — we infer kind from data rather than re-joining exercises.
+func computeCardioSummary(sets []models.Set, user models.User) models.CardioSummary {
+	cutoff := time.Now().AddDate(0, 0, -6).Format("2006-01-02") // includes today + previous 6 days
+	unit := user.DistanceUnit
+	if unit == "" {
+		unit = "mi"
+	}
+	out := models.CardioSummary{Unit: unit}
+	for _, s := range sets {
+		if s.DurationSeconds <= 0 {
+			continue
+		}
+		if s.Date < cutoff {
+			continue
+		}
+		out.TotalMinutes += s.DurationSeconds / 60
+		out.TotalDist = out.TotalDist.Add(s.DistanceValue)
+		out.SessionCount++
+	}
+	return out
 }

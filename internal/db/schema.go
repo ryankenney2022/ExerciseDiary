@@ -23,12 +23,25 @@ func EnsureSchema(path string) {
 	addColumnIfMissing(path, "users", "SEX", "TEXT DEFAULT ''")
 	addColumnIfMissing(path, "users", "DOB", "TEXT DEFAULT ''")
 	addColumnIfMissing(path, "users", "ALTITUDE", "TEXT DEFAULT 'low'")
+	addColumnIfMissing(path, "users", "DISTANCE_UNIT", "TEXT DEFAULT 'mi'")
+
+	addColumnIfMissing(path, "exercises", "KIND", "TEXT DEFAULT 'strength'")
+
+	addColumnIfMissing(path, "sets", "DURATION_SECONDS", "INTEGER DEFAULT 0")
+	addColumnIfMissing(path, "sets", "DISTANCE_VALUE", "REAL DEFAULT 0")
+	addColumnIfMissing(path, "sets", "AVG_HR", "INTEGER DEFAULT 0")
+	addColumnIfMissing(path, "sets", "MAX_HR", "INTEGER DEFAULT 0")
+	addColumnIfMissing(path, "sets", "CALORIES", "INTEGER DEFAULT 0")
+	addColumnIfMissing(path, "sets", "EQUIPMENT", "TEXT DEFAULT ''")
 
 	exec(path, `UPDATE exercises SET VIDEO_URL = '' WHERE VIDEO_URL IS NULL;`)
 	exec(path, `UPDATE sets SET NOTE = '' WHERE NOTE IS NULL;`)
 	exec(path, `UPDATE users SET SEX = '' WHERE SEX IS NULL;`)
 	exec(path, `UPDATE users SET DOB = '' WHERE DOB IS NULL;`)
 	exec(path, `UPDATE users SET ALTITUDE = 'low' WHERE ALTITUDE IS NULL OR ALTITUDE = '';`)
+	exec(path, `UPDATE users SET DISTANCE_UNIT = 'mi' WHERE DISTANCE_UNIT IS NULL OR DISTANCE_UNIT = '';`)
+	exec(path, `UPDATE exercises SET KIND = 'strength' WHERE KIND IS NULL OR KIND = '';`)
+	exec(path, `UPDATE sets SET EQUIPMENT = '' WHERE EQUIPMENT IS NULL;`)
 
 	exec(path, `CREATE TABLE IF NOT EXISTS prt_tests (
 		"ID"                INTEGER PRIMARY KEY,

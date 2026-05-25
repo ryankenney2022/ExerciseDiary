@@ -183,11 +183,11 @@
   </div>
 </div>
 <!-- End Modal -->
-                            <button type="button" class="btn exercise-button flex-grow-1 text-start d-flex justify-content-between align-items-center" onclick='addExercise("{{ .Name }}", "{{ .Weight }}", "{{ .Reps }}")' title="Weight: {{ .Weight }}; Reps: {{ .Reps }};">
+                            <button type="button" class="btn exercise-button flex-grow-1 text-start d-flex justify-content-between align-items-center" onclick='addExercise({{ . }})' title="{{ if eq .Kind "cardio" }}Cardio{{ else }}W: {{ .Weight }}; R: {{ .Reps }}{{ end }}">
                               <span class="text-truncate">{{ .Name }}</span>
                               {{ with index $.LastDone .Name }}<small class="text-muted ms-2 text-nowrap">{{ . }}</small>{{ end }}
                             </button>
-                            <button type="button" class="btn del-set-button px-2" onclick='addExercise("{{ .Name }}", "{{ .Weight }}", "{{ .Reps }}")' title="Add">
+                            <button type="button" class="btn del-set-button px-2" onclick='addExercise({{ . }})' title="Add">
                                 <i class="bi bi-arrow-right-square"></i>
                             </button>
                         </div>
@@ -234,8 +234,8 @@
                     <table class="table table-borderless align-middle table-todayex">
                       <thead>
                           <th class="todayex-name">Name</th>
-                          <th class="todayex-weight">Weight</th>
-                          <th class="todayex-reps">Reps</th>
+                          <th class="todayex-weight">Wt&nbsp;/&nbsp;Dist</th>
+                          <th class="todayex-reps">Reps&nbsp;/&nbsp;Time</th>
                           <th class="todayex-note d-none d-md-table-cell">Note</th>
                           <th class="todayex-del"></th>
                       </thead>
@@ -250,7 +250,26 @@
     </div>
 </div>
 
+<!-- Bike model suggestions (datalist) for the cardio Equipment field on
+     Stationary Bike rows. Auto-completes with past values too. -->
+<datalist id="bikeModelsList">
+  <option value="Life Fitness IC4"></option>
+  <option value="Life Fitness IC5"></option>
+  <option value="Life Fitness IC6"></option>
+  <option value="Life Fitness IC8"></option>
+  <option value="Life Fitness Lifecycle"></option>
+  <option value="Peloton Bike"></option>
+  <option value="Peloton Bike+"></option>
+  <option value="Schwinn IC4"></option>
+  <option value="NordicTrack S22i"></option>
+  <option value="Bowflex C7"></option>
+  <option value="Echelon EX-5"></option>
+  <option value="Wattbike Atom"></option>
+</datalist>
+
 <script>
+  window.allExercises = {{ .ExData.Exs }};
+  window.distanceUnit = "{{ .CurrentUser.DistanceUnit }}" || "mi";
   setFormDate({{ .ExData.Sets }});
   generateWeightChart({{ .ExData.Weight }}, {{ .Config.HeatColor }}, -7);
   makeChart({{ .HeatMap }}, {{ .Config.HeatColor }}, {{ .ExData.Sets }});

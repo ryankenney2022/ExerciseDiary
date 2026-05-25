@@ -27,13 +27,14 @@ type Conf struct {
 // Sex/DOB/Altitude are used for Navy PRT scoring; safe to leave blank for
 // users who only log workouts.
 type User struct {
-	ID        int    `db:"ID"`
-	Name      string `db:"NAME"`
-	Color     string `db:"COLOR"`
-	CreatedAt string `db:"CREATED_AT"`
-	Sex       string `db:"SEX"`      // "M" or "F"; "" if unset
-	DOB       string `db:"DOB"`      // YYYY-MM-DD; "" if unset
-	Altitude  string `db:"ALTITUDE"` // "low" (<5000 ft) or "high"; defaults to "low"
+	ID           int    `db:"ID"`
+	Name         string `db:"NAME"`
+	Color        string `db:"COLOR"`
+	CreatedAt    string `db:"CREATED_AT"`
+	Sex          string `db:"SEX"`           // "M" or "F"; "" if unset
+	DOB          string `db:"DOB"`           // YYYY-MM-DD; "" if unset
+	Altitude     string `db:"ALTITUDE"`      // "low" (<5000 ft) or "high"
+	DistanceUnit string `db:"DISTANCE_UNIT"` // "mi" (default) or "km" - for cardio entries
 }
 
 // PRTTest - one Navy Physical Readiness Test session for a user.
@@ -73,7 +74,8 @@ type Workout struct {
 	Note   string `db:"NOTE"`
 }
 
-// Exercise - one exercise (shared across users)
+// Exercise - one exercise (shared across users).
+// Kind = "strength" (Weight/Reps apply) or "cardio" (Duration/Distance apply).
 type Exercise struct {
 	ID       int             `db:"ID"`
 	Group    string          `db:"GR"`
@@ -85,18 +87,28 @@ type Exercise struct {
 	Color    string          `db:"COLOR"`
 	Weight   decimal.Decimal `db:"WEIGHT"`
 	Reps     int             `db:"REPS"`
+	Kind     string          `db:"KIND"` // "strength" or "cardio"
 }
 
-// Set - one set
+// Set - one logged entry inside a workout. Most fields are optional:
+//   - Strength entries use Weight + Reps; cardio fields stay at 0/""
+//   - Cardio entries use DurationSeconds + DistanceValue (+ optional HR/cal/equipment);
+//     Weight + Reps stay at 0
 type Set struct {
-	ID        int             `db:"ID"`
-	WorkoutID int             `db:"WORKOUT_ID"`
-	Date      string          `db:"DATE"`
-	Name      string          `db:"NAME"`
-	Color     string          `db:"COLOR"`
-	Weight    decimal.Decimal `db:"WEIGHT"`
-	Reps      int             `db:"REPS"`
-	Note      string          `db:"NOTE"`
+	ID              int             `db:"ID"`
+	WorkoutID       int             `db:"WORKOUT_ID"`
+	Date            string          `db:"DATE"`
+	Name            string          `db:"NAME"`
+	Color           string          `db:"COLOR"`
+	Weight          decimal.Decimal `db:"WEIGHT"`
+	Reps            int             `db:"REPS"`
+	Note            string          `db:"NOTE"`
+	DurationSeconds int             `db:"DURATION_SECONDS"`
+	DistanceValue   decimal.Decimal `db:"DISTANCE_VALUE"`
+	AvgHR           int             `db:"AVG_HR"`
+	MaxHR           int             `db:"MAX_HR"`
+	Calories        int             `db:"CALORIES"`
+	Equipment       string          `db:"EQUIPMENT"`
 }
 
 // AllExData - all sets and exercises
@@ -142,4 +154,13 @@ type GuiData struct {
 	ExGroups     []string // distinct, sorted group names across all exercises
 	ExPlaces     []string // distinct, sorted "place in group" values across all exercises
 	LastDone     map[string]string // exercise name -> most recent DATE the current user logged it
+	CardioSummary CardioSummary // 7-day cardio totals for the current user (Stats page)
+}
+
+// CardioSummary aggregates a user's cardio activity over a recent window.
+type CardioSummary struct {
+	TotalMinutes int
+	TotalDist    decimal.Decimal
+	Unit         string
+	SessionCount int
 }

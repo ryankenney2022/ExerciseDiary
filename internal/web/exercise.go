@@ -52,6 +52,10 @@ func saveExerciseHandler(c *gin.Context) {
 	oneEx.Descr = c.PostForm("descr")
 	oneEx.Image = c.PostForm("image")
 	oneEx.VideoURL = c.PostForm("video_url")
+	oneEx.Kind = c.PostForm("kind")
+	if oneEx.Kind != "cardio" {
+		oneEx.Kind = "strength"
+	}
 
 	id := c.PostForm("id")
 	weight := c.PostForm("weight")
