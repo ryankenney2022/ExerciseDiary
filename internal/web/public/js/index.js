@@ -19,13 +19,27 @@ function kindForName(name) {
     return "strength";
 }
 
+// Find the Group attribute of an exercise by name. Falls back to "Other" so
+// rows whose master exercise was deleted still group somewhere sensible.
+function groupForName(name) {
+    const all = window.allExercises || [];
+    for (const e of all) {
+        if (e.Name === name) return e.Group || "Other";
+    }
+    return "Other";
+}
+
 function secondsToMMSS(sec) {
     sec = parseInt(sec || 0, 10);
     if (!sec || sec <= 0) return "";
     return Math.floor(sec / 60) + ":" + String(sec % 60).padStart(2, "0");
 }
 
-// addExercise renders one row in #todayEx based on the input's kind.
+// addExercise renders one row in #todayEx based on the input's kind, then
+// places it so that rows of the same Group stay together (and same-Name rows
+// stay adjacent within a group). A group header row is rendered above each
+// section so the workout reads at a glance ("Push", "Pull", ...).
+//
 // Input is either an Exercise (from clicking the exercise list) or a Set
 // (from setFormContent recalling saved sets). Both shapes have .Name.
 function addExercise(obj) {
@@ -33,10 +47,90 @@ function addExercise(obj) {
     obj = obj || {};
     const name = obj.Name || "";
     const kind = obj.Kind || kindForName(name);
+    const group = obj.Group || groupForName(name);
     const html = (kind === "cardio")
         ? renderCardioRow(id, name, obj)
         : renderStrengthRow(id, name, obj);
-    document.getElementById('todayEx').insertAdjacentHTML('beforeend', html);
+
+    const tbody = document.getElementById('todayEx');
+    const tmp = document.createElement('tbody');
+    tmp.innerHTML = html;
+    const newRows = Array.from(tmp.children); // 2 TRs per cluster
+
+    // Tag rows with group/name so future inserts can find siblings.
+    newRows.forEach(tr => { tr.dataset.group = group; tr.dataset.name = name; });
+
+    insertClusterGrouped(tbody, newRows, group, name);
+
+    // Fire input on the weight field once so plate hint populates without
+    // the user having to type.
+    const mainTr = newRows.find(r => !r.id.startsWith('hist-') && !r.id.startsWith('adv-'));
+    if (mainTr) {
+        const w = mainTr.querySelector('input[name="weight"]');
+        if (w) w.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    // Trigger a rest timer if the user has it enabled (rest-timer.js wires
+    // window.onStrengthSetAdded; absent otherwise).
+    if (kind === "strength" && typeof window.onStrengthSetAdded === "function") {
+        window.onStrengthSetAdded();
+    }
+}
+
+// insertClusterGrouped: append a row cluster (1 or 2 TRs that move together)
+// into the today-workout tbody, maintaining the (group, name) ordering rule.
+function insertClusterGrouped(tbody, newRows, group, name) {
+    let header = tbody.querySelector(`tr.todayex-group-header[data-group="${cssEsc(group)}"]`);
+    if (!header) {
+        header = document.createElement('tr');
+        header.className = 'todayex-group-header';
+        header.dataset.group = group;
+        header.innerHTML = `<td colspan="5" class="todayex-group-title"><strong>${escapeHTMLAttr(group)}</strong></td>`;
+        tbody.appendChild(header);
+    }
+
+    // 1) Prefer to insert right after the LAST same-name row in this group.
+    const sameNameRows = tbody.querySelectorAll(
+        `tr[data-group="${cssEsc(group)}"][data-name="${cssEsc(name)}"]`
+    );
+    if (sameNameRows.length) {
+        const lastSame = sameNameRows[sameNameRows.length - 1];
+        insertAfterCluster(tbody, lastSame, newRows);
+        return;
+    }
+
+    // 2) Otherwise insert at the end of this group's section (which means
+    //    right before the NEXT group header, or at the very end).
+    let cursor = header.nextSibling;
+    while (cursor && !(cursor.nodeType === 1 && cursor.classList && cursor.classList.contains('todayex-group-header'))) {
+        cursor = cursor.nextSibling;
+    }
+    if (cursor) {
+        newRows.forEach(tr => tbody.insertBefore(tr, cursor));
+    } else {
+        newRows.forEach(tr => tbody.appendChild(tr));
+    }
+}
+
+// insertAfterCluster: insert newRows immediately after the LAST TR of the
+// cluster that anchorMainTr belongs to. Cluster siblings:
+//   strength: hist-${id} (helper, above)  +  ${id} (main)
+//   cardio:   ${id} (main)                +  adv-${id} (helper, below)
+function insertAfterCluster(tbody, anchorMainTr, newRows) {
+    const anchorId = anchorMainTr.id;
+    const adv = document.getElementById('adv-' + anchorId);
+    const anchorLast = adv && adv.parentNode === tbody ? adv : anchorMainTr;
+    let cursor = anchorLast.nextSibling;
+    newRows.forEach(tr => {
+        if (cursor) tbody.insertBefore(tr, cursor);
+        else tbody.appendChild(tr);
+    });
+}
+
+// CSS.escape polyfill — older browsers may not have it (Safari pre-12).
+function cssEsc(s) {
+    if (window.CSS && typeof CSS.escape === "function") return CSS.escape(s);
+    return String(s).replace(/[^a-zA-Z0-9_-]/g, c => "\\" + c);
 }
 
 function renderStrengthRow(rowId, name, obj) {
@@ -290,9 +384,24 @@ function delExercise(exID) {
     const row = document.getElementById(exID);
     const adv = document.getElementById('adv-' + exID);
     const hist = document.getElementById('hist-' + exID);
+    const group = row && row.dataset && row.dataset.group;
     if (adv) adv.remove();
     if (hist) hist.remove();
     if (row) row.remove();
+
+    // Remove the group header if no rows for that group remain.
+    if (group) {
+        const tbody = document.getElementById('todayEx');
+        const remaining = tbody.querySelectorAll(
+            `tr[data-group="${cssEsc(group)}"]:not(.todayex-group-header)`
+        );
+        if (!remaining.length) {
+            const header = tbody.querySelector(
+                `tr.todayex-group-header[data-group="${cssEsc(group)}"]`
+            );
+            if (header) header.remove();
+        }
+    }
 }
 
 function moveDayLeftRight(where, sets) {

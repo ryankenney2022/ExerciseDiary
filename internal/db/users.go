@@ -43,36 +43,46 @@ func GetUserByName(path, name string) models.User {
 
 // InsertUser - create a new user; no-op if name already exists.
 // Sex/DOB/Altitude/DistanceUnit can be empty and edited later.
-func InsertUser(path, name, color, sex, dob, altitude, distanceUnit string) {
-	if existing := GetUserByName(path, name); existing.ID != 0 {
+func InsertUser(path string, u models.User) {
+	if existing := GetUserByName(path, u.Name); existing.ID != 0 {
 		return
 	}
-	if altitude == "" {
-		altitude = "low"
+	if u.Altitude == "" {
+		u.Altitude = "low"
 	}
-	if distanceUnit == "" {
-		distanceUnit = "mi"
+	if u.DistanceUnit == "" {
+		u.DistanceUnit = "mi"
+	}
+	if u.RestTimerSeconds <= 0 {
+		u.RestTimerSeconds = 90
 	}
 	now := time.Now().UTC().Format(time.RFC3339)
 	stmt := fmt.Sprintf(
-		`INSERT INTO users (NAME, COLOR, CREATED_AT, SEX, DOB, ALTITUDE, DISTANCE_UNIT) VALUES ('%s','%s','%s','%s','%s','%s','%s');`,
-		quoteStr(name), quoteStr(color), now,
-		quoteStr(sex), quoteStr(dob), quoteStr(altitude), quoteStr(distanceUnit),
+		`INSERT INTO users (NAME, COLOR, CREATED_AT, SEX, DOB, ALTITUDE, DISTANCE_UNIT, REST_TIMER_ON, REST_TIMER_SECONDS) VALUES ('%s','%s','%s','%s','%s','%s','%s','%d','%d');`,
+		quoteStr(u.Name), quoteStr(u.Color), now,
+		quoteStr(u.Sex), quoteStr(u.DOB), quoteStr(u.Altitude), quoteStr(u.DistanceUnit),
+		u.RestTimerOn, u.RestTimerSeconds,
 	)
 	exec(path, stmt)
 }
 
 // UpdateUser - update an existing user's editable fields.
-func UpdateUser(path string, id int, name, color, sex, dob, altitude, distanceUnit string) {
-	if altitude == "" {
-		altitude = "low"
+func UpdateUser(path string, u models.User) {
+	if u.Altitude == "" {
+		u.Altitude = "low"
 	}
-	if distanceUnit == "" {
-		distanceUnit = "mi"
+	if u.DistanceUnit == "" {
+		u.DistanceUnit = "mi"
+	}
+	if u.RestTimerSeconds <= 0 {
+		u.RestTimerSeconds = 90
 	}
 	stmt := fmt.Sprintf(
-		`UPDATE users SET NAME = '%s', COLOR = '%s', SEX = '%s', DOB = '%s', ALTITUDE = '%s', DISTANCE_UNIT = '%s' WHERE ID = '%d';`,
-		quoteStr(name), quoteStr(color), quoteStr(sex), quoteStr(dob), quoteStr(altitude), quoteStr(distanceUnit), id,
+		`UPDATE users SET NAME = '%s', COLOR = '%s', SEX = '%s', DOB = '%s', ALTITUDE = '%s', DISTANCE_UNIT = '%s', REST_TIMER_ON = '%d', REST_TIMER_SECONDS = '%d' WHERE ID = '%d';`,
+		quoteStr(u.Name), quoteStr(u.Color), quoteStr(u.Sex), quoteStr(u.DOB),
+		quoteStr(u.Altitude), quoteStr(u.DistanceUnit),
+		u.RestTimerOn, u.RestTimerSeconds,
+		u.ID,
 	)
 	exec(path, stmt)
 }

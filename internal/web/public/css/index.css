@@ -1,12 +1,22 @@
 .exercise-button, .add-exercise-button, .del-set-button {
     height: 100%;
     background-color: #00000000;
-    color: var(--bs-primary);
+    /* Use the theme's high-contrast foreground so icons read clearly on dark
+       themes (was var(--bs-primary), which blended into the navbar/cards). */
+    color: var(--bs-body-color);
     text-align: center;
 }
 .exercise-button:hover, .add-exercise-button:hover, .del-set-button:hover {
     background-color: #0000001a;
+    /* On hover, hint at action with the theme accent. */
+    color: var(--bs-emphasis-color, var(--bs-body-color));
 }
+/* Semantic-color overrides (e.g. trash) keep their meaning — don't let the
+   default body color rule above strip the red. */
+.del-set-button.text-danger,
+.del-set-button.text-danger:hover { color: var(--bs-danger) !important; }
+.del-set-button.text-success,
+.del-set-button.text-success:hover { color: var(--bs-success) !important; }
 
 .exercise-button {    
     width: 70%;
@@ -90,4 +100,51 @@
     margin-top: 0.15rem;
     font-size: 0.75rem;
     line-height: 1.1;
+}
+
+/* Floating rest-timer chip — pinned bottom-right, doesn't interfere with the
+   form. Click to cancel. Turns green when the cool-down period ends. */
+.rest-timer-chip {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    z-index: 1080;
+    background: var(--bs-primary);
+    color: var(--bs-light);
+    padding: 0.5rem 0.9rem;
+    border-radius: 999px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.25s ease;
+}
+.rest-timer-chip .bi { vertical-align: -2px; margin-right: 0.25rem; }
+.rest-timer-chip.rest-timer-done {
+    background: var(--bs-success);
+    animation: restTimerFlash 0.6s ease-in-out 0s 2;
+}
+@keyframes restTimerFlash {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.08); }
+}
+
+/* Group header rows — one per Group (Push, Pull, Cardio, ...). Reads as a
+   clear section divider; high-contrast so the user can scan group structure
+   at a glance. */
+.table-todayex .todayex-group-header td {
+    padding: 0.5rem 0.6rem 0.35rem;
+    border-top: 2px solid var(--bs-primary);
+    background: var(--bs-tertiary-bg);
+}
+.table-todayex .todayex-group-header:first-child td {
+    border-top: none;
+}
+.table-todayex .todayex-group-title {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--bs-emphasis-color, var(--bs-body-color));
 }

@@ -23,36 +23,47 @@ func usersHandler(c *gin.Context) {
 
 // saveUserHandler handles both "add" (when id is empty/0) and "edit" (when id > 0).
 func saveUserHandler(c *gin.Context) {
-	name := c.PostForm("name")
-	color := c.PostForm("color")
-	sex := c.PostForm("sex")
-	dob := c.PostForm("dob")
-	altitude := c.PostForm("altitude")
-	distanceUnit := c.PostForm("distance_unit")
-	idStr := c.PostForm("id")
+	u := models.User{
+		Name:         c.PostForm("name"),
+		Color:        c.PostForm("color"),
+		Sex:          c.PostForm("sex"),
+		DOB:          c.PostForm("dob"),
+		Altitude:     c.PostForm("altitude"),
+		DistanceUnit: c.PostForm("distance_unit"),
+	}
 
-	if name == "" {
+	if u.Name == "" {
 		c.Redirect(http.StatusFound, "/users/")
 		return
 	}
-	if color == "" {
-		color = "#0d6efd"
+	if u.Color == "" {
+		u.Color = "#0d6efd"
 	}
-	if altitude != "high" {
-		altitude = "low"
+	if u.Altitude != "high" {
+		u.Altitude = "low"
 	}
-	if sex != "M" && sex != "F" {
-		sex = ""
+	if u.Sex != "M" && u.Sex != "F" {
+		u.Sex = ""
 	}
-	if distanceUnit != "km" {
-		distanceUnit = "mi"
+	if u.DistanceUnit != "km" {
+		u.DistanceUnit = "mi"
 	}
 
+	// Rest-timer fields. Checkbox sends "1" when checked, nothing when not.
+	if c.PostForm("rest_timer_on") == "1" {
+		u.RestTimerOn = 1
+	}
+	if s, err := strconv.Atoi(c.PostForm("rest_timer_seconds")); err == nil && s > 0 {
+		u.RestTimerSeconds = s
+	}
+
+	idStr := c.PostForm("id")
 	id, _ := strconv.Atoi(idStr)
 	if id > 0 {
-		db.UpdateUser(appConfig.DBPath, id, name, color, sex, dob, altitude, distanceUnit)
+		u.ID = id
+		db.UpdateUser(appConfig.DBPath, u)
 	} else {
-		db.InsertUser(appConfig.DBPath, name, color, sex, dob, altitude, distanceUnit)
+		db.InsertUser(appConfig.DBPath, u)
 	}
 	c.Redirect(http.StatusFound, "/users/")
 }

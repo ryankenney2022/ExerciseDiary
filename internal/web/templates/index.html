@@ -4,6 +4,7 @@
 <script src="/fs/public/js/index.js"></script>
 <script src="/fs/public/js/weight-chart.js"></script>
 <script src="/fs/public/js/plates.js"></script>
+<script src="/fs/public/js/rest-timer.js"></script>
 <link rel="stylesheet" type="text/css" href="/fs/public/css/index.css" />
 <body>
 <!-- Add Weight Modal -->
@@ -278,6 +279,10 @@
   window.allExercises = {{ .ExData.Exs }};
   window.allSets = {{ .ExData.Sets }};
   window.distanceUnit = "{{ .CurrentUser.DistanceUnit }}" || "mi";
+  window.restTimer = {
+    enabled: {{ if eq .CurrentUser.RestTimerOn 1 }}true{{ else }}false{{ end }},
+    seconds: {{ if .CurrentUser.RestTimerSeconds }}{{ .CurrentUser.RestTimerSeconds }}{{ else }}90{{ end }}
+  };
   setFormDate(window.allSets);
   generateWeightChart({{ .ExData.Weight }}, {{ .Config.HeatColor }}, -7);
   makeChart({{ .HeatMap }}, {{ .Config.HeatColor }}, window.allSets);

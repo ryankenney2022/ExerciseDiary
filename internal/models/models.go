@@ -35,6 +35,11 @@ type User struct {
 	DOB          string `db:"DOB"`           // YYYY-MM-DD; "" if unset
 	Altitude     string `db:"ALTITUDE"`      // "low" (<5000 ft) or "high"
 	DistanceUnit string `db:"DISTANCE_UNIT"` // "mi" (default) or "km" - for cardio entries
+	// Rest-timer preferences: when ON, the workout entry page starts a
+	// floating countdown of RestTimerSeconds every time a strength row
+	// is added (typical between-set cooldown is 60-120 s).
+	RestTimerOn      int `db:"REST_TIMER_ON"`      // 0 = off, 1 = on
+	RestTimerSeconds int `db:"REST_TIMER_SECONDS"` // duration; default 90
 }
 
 // PRTTest - one Navy Physical Readiness Test session for a user.

@@ -24,6 +24,8 @@ func EnsureSchema(path string) {
 	addColumnIfMissing(path, "users", "DOB", "TEXT DEFAULT ''")
 	addColumnIfMissing(path, "users", "ALTITUDE", "TEXT DEFAULT 'low'")
 	addColumnIfMissing(path, "users", "DISTANCE_UNIT", "TEXT DEFAULT 'mi'")
+	addColumnIfMissing(path, "users", "REST_TIMER_ON", "INTEGER DEFAULT 0")
+	addColumnIfMissing(path, "users", "REST_TIMER_SECONDS", "INTEGER DEFAULT 90")
 
 	addColumnIfMissing(path, "exercises", "KIND", "TEXT DEFAULT 'strength'")
 
