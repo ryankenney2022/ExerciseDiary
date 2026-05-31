@@ -77,6 +77,7 @@ func Gui(dirPath, nodePath string) {
 	router.GET("/prt/edit/:id", auth.Auth(&authConf), prtFormHandler) // prt.go
 	router.GET("/equipment/", auth.Auth(&authConf), equipmentHandler) // equipment.go
 	router.GET("/equipment/suggest", auth.Auth(&authConf), suggestPlatesHandler) // equipment.go
+	router.GET("/plans/", auth.Auth(&authConf), templatesHandler) // templates_page.go
 
 	router.POST("/config/", auth.Auth(&authConf), saveConfigHandler)     // config.go
 	router.POST("/config/auth", auth.Auth(&authConf), saveConfigAuth)    // config.go

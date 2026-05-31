@@ -1,0 +1,40 @@
+{{ define "templates_page.html" }}
+
+<body>
+<div class="container-lg mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">Workout plans</h4>
+    <a href="/plans/edit/new" class="btn btn-primary"><i class="bi bi-plus-lg"></i> New plan</a>
+  </div>
+
+  {{ if not .Templates }}
+    <p class="text-muted">No plans yet. Create one with <strong>New plan</strong>, or build a workout and use <strong>Save as plan</strong> on the home page.</p>
+  {{ end }}
+
+  <div class="row">
+    {{ range .Templates }}
+    <div class="col-md-6 col-lg-4 mb-3">
+      <div class="card border-primary h-100">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span class="fw-bold">{{ if .Name }}{{ .Name }}{{ else }}(untitled){{ end }}</span>
+          <span class="badge bg-secondary">{{ index $.TemplateCounts .ID }} ex</span>
+        </div>
+        <div class="card-body">
+          {{ if .Note }}<p class="small text-muted mb-2">{{ .Note }}</p>{{ end }}
+          <div class="d-flex gap-2 flex-wrap">
+            <a href="/?apply={{ .ID }}" class="btn btn-sm btn-success"><i class="bi bi-clipboard-check"></i> Apply to today</a>
+            <a href="/plans/edit/{{ .ID }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i> Edit</a>
+            <form action="/plans/del" method="post" onsubmit="return confirm('Delete this plan?');" class="d-inline">
+              <input type="hidden" name="id" value="{{ .ID }}">
+              <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    {{ end }}
+  </div>
+</div>
+
+{{ template "footer.html" }}
+{{ end }}
