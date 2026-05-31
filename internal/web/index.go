@@ -33,6 +33,7 @@ func indexHandler(c *gin.Context) {
 	guiData.Users = allUsers(c)
 	guiData.CurrentUser = user
 	guiData.TodayWorkout = db.GetWorkoutByUserDate(appConfig.DBPath, user.ID, time.Now().Format("2006-01-02"))
+	guiData.Templates = db.SelectTemplates(appConfig.DBPath)
 	guiData.LastPRT = db.GetLastPRTByUser(appConfig.DBPath, user.ID)
 	if user.Sex != "" && user.DOB != "" {
 		age := prt.AgeOnDate(user.DOB, time.Now().Format("2006-01-02"))

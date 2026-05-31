@@ -123,3 +123,42 @@ func deleteTemplateHandler(c *gin.Context) {
 	}
 	c.Redirect(http.StatusFound, "/plans/")
 }
+
+// templateJSONHandler returns a resolved plan for client-side apply. Items are
+// joined to the current exercise list (Name/Kind/Mode/Color/Group); items whose
+// exercise no longer exists are dropped.
+func templateJSONHandler(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	t := db.GetTemplate(appConfig.DBPath, id)
+
+	byID := map[int]models.Exercise{}
+	for _, e := range db.SelectEx(appConfig.DBPath) {
+		byID[e.ID] = e
+	}
+
+	type applyItem struct {
+		Name          string `json:"Name"`
+		Group         string `json:"Group"`
+		Kind          string `json:"Kind"`
+		Mode          string `json:"Mode"`
+		Color         string `json:"Color"`
+		TargetSets    int    `json:"TargetSets"`
+		TargetReps    int    `json:"TargetReps"`
+		TargetSeconds int    `json:"TargetSeconds"`
+		Note          string `json:"Note"`
+	}
+	out := []applyItem{}
+	for _, it := range t.Items {
+		e, ok := byID[it.ExerciseID]
+		if !ok {
+			continue
+		}
+		out = append(out, applyItem{
+			Name: e.Name, Group: e.Group, Kind: e.Kind, Mode: e.Mode, Color: e.Color,
+			TargetSets: it.TargetSets, TargetReps: it.TargetReps,
+			TargetSeconds: it.TargetSeconds, Note: it.Note,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"name": t.Name, "note": t.Note, "items": out})
+}

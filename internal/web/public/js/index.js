@@ -91,6 +91,41 @@ function addExercise(obj) {
     }
 }
 
+// applyPlan(id): fetch a saved plan and inject its planned rows into today's
+// form via addExercise(). Skips exercises already present (append + skip-dup).
+// Nothing persists until the user hits Save (identical to manual entry).
+window.applyPlan = function (id) {
+    fetch('/plans/json/' + id)
+        .then(r => r.json())
+        .then(plan => {
+            const present = new Set();
+            document.querySelectorAll('#todayEx tr[data-name]').forEach(tr => {
+                if (tr.dataset.name) present.add(tr.dataset.name);
+            });
+
+            (plan.items || []).forEach(it => {
+                if (present.has(it.Name)) return;
+                present.add(it.Name);
+                const sets = it.TargetSets > 0 ? it.TargetSets : 1;
+                for (let s = 0; s < sets; s++) {
+                    addExercise({
+                        Name: it.Name, Group: it.Group, Kind: it.Kind, Mode: it.Mode, Color: it.Color,
+                        Reps: it.TargetReps || 0,
+                        DurationSeconds: it.TargetSeconds || 0,
+                        Note: it.Note || "",
+                        Completed: 0
+                    });
+                }
+            });
+
+            const nameEl = document.getElementById('workoutName');
+            const noteEl = document.getElementById('workoutNote');
+            if (nameEl && !nameEl.value && plan.name) nameEl.value = plan.name;
+            if (noteEl && !noteEl.value && plan.note) noteEl.value = plan.note;
+        })
+        .catch(e => console.error('applyPlan failed', e));
+};
+
 // insertClusterGrouped: append a row cluster (1 or 2 TRs that move together)
 // into the today-workout tbody, maintaining the (group, name) ordering rule.
 function insertClusterGrouped(tbody, newRows, group, name) {

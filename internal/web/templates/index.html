@@ -254,6 +254,18 @@
                 <form action="/set/" method="post" name="sets">
                   <input name="date" type="hidden" id="formDate">
                   <div class="mb-3">
+                    {{ if .Templates }}
+                    <div class="dropdown mb-2">
+                      <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-clipboard-check"></i> Start from plan
+                      </button>
+                      <ul class="dropdown-menu">
+                        {{ range .Templates }}
+                        <li><a class="dropdown-item" href="#" onclick="applyPlan({{ .ID }}); return false;">{{ if .Name }}{{ .Name }}{{ else }}(untitled){{ end }}</a></li>
+                        {{ end }}
+                      </ul>
+                    </div>
+                    {{ end }}
                     <input name="workout_name" type="text" class="form-control mb-2" id="workoutName" placeholder="Workout name (optional, e.g. Push Day)" value="{{ .TodayWorkout.Name }}">
                     <textarea name="workout_note" rows="2" class="form-control" id="workoutNote" placeholder="Workout notes (how it felt, what to remember next time)">{{ .TodayWorkout.Note }}</textarea>
                   </div>
@@ -310,6 +322,15 @@
   };
   renderWeightPanel(window.allWeight = {{ .ExData.Weight }});
   setFormDate(window.allSets);
+  // If arriving from a library "Apply to today" link (?apply=ID), apply it now
+  // that today's existing rows are rendered (so skip-duplicate sees them).
+  (function () {
+    const p = new URLSearchParams(window.location.search).get('apply');
+    if (p && typeof window.applyPlan === 'function') {
+      window.applyPlan(p);
+      history.replaceState({}, '', '/');
+    }
+  })();
   generateWeightChart({{ .ExData.Weight }}, {{ .Config.HeatColor }}, -7);
   makeChart({{ .HeatMap }}, {{ .Config.HeatColor }}, window.allSets);
 </script>

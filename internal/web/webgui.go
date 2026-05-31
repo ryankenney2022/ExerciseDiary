@@ -79,6 +79,7 @@ func Gui(dirPath, nodePath string) {
 	router.GET("/equipment/suggest", auth.Auth(&authConf), suggestPlatesHandler) // equipment.go
 	router.GET("/plans/", auth.Auth(&authConf), templatesHandler) // templates_page.go
 	router.GET("/plans/edit/:id", auth.Auth(&authConf), templateFormHandler) // templates_page.go
+	router.GET("/plans/json/:id", auth.Auth(&authConf), templateJSONHandler) // templates_page.go
 
 	router.POST("/config/", auth.Auth(&authConf), saveConfigHandler)     // config.go
 	router.POST("/config/auth", auth.Auth(&authConf), saveConfigAuth)    // config.go
