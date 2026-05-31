@@ -87,6 +87,31 @@ type Workout struct {
 	Note   string `db:"NOTE"`
 }
 
+// WorkoutTemplate - a reusable, shared workout plan. Shared across all users
+// (no owner column). Items hold prescribed exercises (sets/reps or duration,
+// never weight). Items is populated by db.GetTemplate; it is not a DB column.
+type WorkoutTemplate struct {
+	ID        int    `db:"ID"`
+	Name      string `db:"NAME"`
+	Note      string `db:"NOTE"`
+	CreatedAt string `db:"CREATED_AT"`
+	Items     []TemplateItem
+}
+
+// TemplateItem - one prescribed exercise inside a WorkoutTemplate.
+// TargetReps applies to MODE=reps exercises; TargetSeconds to MODE=timed or
+// KIND=cardio. Zero = unset (apply falls back to a single blank row).
+type TemplateItem struct {
+	ID            int    `db:"ID"`
+	TemplateID    int    `db:"TEMPLATE_ID"`
+	ExerciseID    int    `db:"EXERCISE_ID"`
+	Position      int    `db:"POSITION"`
+	TargetSets    int    `db:"TARGET_SETS"`
+	TargetReps    int    `db:"TARGET_REPS"`
+	TargetSeconds int    `db:"TARGET_SECONDS"`
+	Note          string `db:"NOTE"`
+}
+
 // Exercise - one exercise (shared across users).
 // Kind = "strength" (Weight/Reps apply) or "cardio" (Duration/Distance apply).
 // Mode applies to Kind=strength only: "reps" (weight × reps, default) or
@@ -176,6 +201,9 @@ type GuiData struct {
 	CardioSummary CardioSummary // 7-day cardio totals for the current user (Stats page)
 	Equipment    Equipment // current user's barbell + unit (for /equipment/)
 	Plates       []Plate   // current user's plate inventory (for /equipment/)
+	Templates      []WorkoutTemplate // plan library (home dropdown + /plans/)
+	TemplateCounts map[int]int       // template ID -> exercise count (library cards)
+	OneTemplate    WorkoutTemplate   // for the builder form
 }
 
 // CardioSummary aggregates a user's cardio activity over a recent window.
