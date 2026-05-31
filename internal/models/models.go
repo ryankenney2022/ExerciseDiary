@@ -180,27 +180,27 @@ type BodyWeight struct {
 
 // GuiData - web gui data
 type GuiData struct {
-	Config       Conf
-	Themes       []string
-	ExData       AllExData
-	GroupMap     map[string]string
-	OneEx        Exercise
-	HeatMap      []HeatMapData
-	Version      string
-	Auth         auth.Conf
-	Users        []User
-	CurrentUser  User
-	TodayWorkout Workout
-	PRTTests     []PRTTest
-	OnePRT       PRTTest
-	LastPRT      PRTTest // most recent test for the current user (for index summary card)
-	ScoreSheet   *prt.Sheet // standards table for current user's bracket (nil if unknown)
-	ExGroups     []string // distinct, sorted group names across all exercises
-	ExPlaces     []string // distinct, sorted "place in group" values across all exercises
-	LastDone     map[string]string // exercise name -> most recent DATE the current user logged it
-	CardioSummary CardioSummary // 7-day cardio totals for the current user (Stats page)
-	Equipment    Equipment // current user's barbell + unit (for /equipment/)
-	Plates       []Plate   // current user's plate inventory (for /equipment/)
+	Config         Conf
+	Themes         []string
+	ExData         AllExData
+	GroupMap       map[string]string
+	OneEx          Exercise
+	HeatMap        []HeatMapData
+	Version        string
+	Auth           auth.Conf
+	Users          []User
+	CurrentUser    User
+	TodayWorkout   Workout
+	PRTTests       []PRTTest
+	OnePRT         PRTTest
+	LastPRT        PRTTest           // most recent test for the current user (for index summary card)
+	ScoreSheet     *prt.Sheet        // standards table for current user's bracket (nil if unknown)
+	ExGroups       []string          // distinct, sorted group names across all exercises
+	ExPlaces       []string          // distinct, sorted "place in group" values across all exercises
+	LastDone       map[string]string // exercise name -> most recent DATE the current user logged it
+	CardioSummary  CardioSummary     // 7-day cardio totals for the current user (Stats page)
+	Equipment      Equipment         // current user's barbell + unit (for /equipment/)
+	Plates         []Plate           // current user's plate inventory (for /equipment/)
 	Templates      []WorkoutTemplate // plan library (home dropdown + /plans/)
 	TemplateCounts map[int]int       // template ID -> exercise count (library cards)
 	OneTemplate    WorkoutTemplate   // for the builder form
