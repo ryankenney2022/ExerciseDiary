@@ -126,6 +126,77 @@ window.applyPlan = function (id) {
         .catch(e => console.error('applyPlan failed', e));
 };
 
+// mmssToSeconds parses "m:ss" or plain seconds into integer seconds.
+function mmssToSeconds(v) {
+    v = String(v || "").trim();
+    if (!v) return 0;
+    if (v.indexOf(":") === -1) return parseInt(v, 10) || 0;
+    const parts = v.split(":");
+    const m = parseInt(parts[0], 10) || 0;
+    const s = parseInt(parts[1], 10) || 0;
+    return m * 60 + s;
+}
+
+// modeValue returns the most common value in an array (0 if empty).
+function modeValue(arr) {
+    if (!arr || !arr.length) return 0;
+    const counts = {};
+    let best = arr[0], bestN = 0;
+    for (const v of arr) {
+        counts[v] = (counts[v] || 0) + 1;
+        if (counts[v] > bestN) { bestN = counts[v]; best = v; }
+    }
+    return best;
+}
+
+function exObjForName(name) {
+    for (const e of (window.allExercises || [])) if (e.Name === name) return e;
+    return null;
+}
+
+// saveDayAsPlan snapshots today's distinct exercises into a new plan: one item
+// per exercise, TargetSets = number of rows, TargetReps/TargetSeconds = the
+// most common value among them. Weight is ignored. Hands off to the builder
+// (pre-filled via sessionStorage) so the user can tweak before saving.
+window.saveDayAsPlan = function () {
+    const order = [];
+    const map = {};
+    document.querySelectorAll('#todayEx tr[data-name]').forEach(tr => {
+        if (tr.id && (tr.id.startsWith('hist-') || tr.id.startsWith('adv-'))) return;
+        const name = tr.dataset.name;
+        if (!name) return;
+        if (!map[name]) { map[name] = { count: 0, reps: [], secs: [] }; order.push(name); }
+        map[name].count += 1;
+        const repsEl = tr.querySelector('input[name="reps"]');
+        if (repsEl && repsEl.value) map[name].reps.push(parseInt(repsEl.value, 10) || 0);
+        const durEl = tr.querySelector('input[name="duration_mmss"]');
+        if (durEl && durEl.value) map[name].secs.push(mmssToSeconds(durEl.value));
+    });
+
+    if (!order.length) { alert('Add some exercises first.'); return; }
+
+    const planName = prompt('Name this plan:', (document.getElementById('workoutName') || {}).value || '');
+    if (planName === null) return; // cancelled
+
+    const items = order.map(name => {
+        const e = exObjForName(name);
+        const m = map[name];
+        return {
+            ExerciseID: e ? e.ID : 0,
+            TargetSets: m.count,
+            TargetReps: modeValue(m.reps),
+            TargetSeconds: modeValue(m.secs),
+            Note: ""
+        };
+    }).filter(it => it.ExerciseID !== 0);
+
+    try {
+        sessionStorage.setItem('planFromDay', JSON.stringify(items));
+        sessionStorage.setItem('planFromDayName', planName);
+    } catch (e) {}
+    window.location.href = '/plans/edit/new';
+};
+
 // insertClusterGrouped: append a row cluster (1 or 2 TRs that move together)
 // into the today-workout tbody, maintaining the (group, name) ordering rule.
 function insertClusterGrouped(tbody, newRows, group, name) {
