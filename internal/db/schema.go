@@ -98,11 +98,30 @@ func EnsureSchema(path string) {
 		"PAIR_COUNT" INTEGER DEFAULT 0
 	);`)
 
+	exec(path, `CREATE TABLE IF NOT EXISTS workout_templates (
+		"ID"         INTEGER PRIMARY KEY,
+		"NAME"       TEXT DEFAULT '',
+		"NOTE"       TEXT DEFAULT '',
+		"CREATED_AT" TEXT DEFAULT ''
+	);`)
+
+	exec(path, `CREATE TABLE IF NOT EXISTS template_items (
+		"ID"             INTEGER PRIMARY KEY,
+		"TEMPLATE_ID"    INTEGER NOT NULL,
+		"EXERCISE_ID"    INTEGER NOT NULL,
+		"POSITION"       INTEGER DEFAULT 0,
+		"TARGET_SETS"    INTEGER DEFAULT 0,
+		"TARGET_REPS"    INTEGER DEFAULT 0,
+		"TARGET_SECONDS" INTEGER DEFAULT 0,
+		"NOTE"           TEXT DEFAULT ''
+	);`)
+
 	exec(path, `CREATE INDEX IF NOT EXISTS idx_workouts_user_date ON workouts(USER_ID, DATE);`)
 	exec(path, `CREATE INDEX IF NOT EXISTS idx_sets_workout ON sets(WORKOUT_ID);`)
 	exec(path, `CREATE INDEX IF NOT EXISTS idx_weight_user ON weight(USER_ID);`)
 	exec(path, `CREATE INDEX IF NOT EXISTS idx_prt_user_date ON prt_tests(USER_ID, DATE DESC);`)
 	exec(path, `CREATE INDEX IF NOT EXISTS idx_plates_user ON plates(USER_ID);`)
+	exec(path, `CREATE INDEX IF NOT EXISTS idx_template_items_tpl ON template_items(TEMPLATE_ID);`)
 }
 
 func addColumnIfMissing(path, table, column, colType string) {
