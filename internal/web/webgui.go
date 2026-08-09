@@ -46,19 +46,35 @@ func Gui(dirPath, nodePath string) {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 
+	verFile, err := pubFS.ReadFile("public/version")
+	check.IfError(err)
+	appVersion = parseVersion(verFile)
+
 	funcMap := template.FuncMap{
 		"ytEmbed":       YouTubeEmbed,
 		"prtMMSS":       prtFormatSeconds,
 		"prtEventLabel": prtEventLabel,
 		"prtEventBadge": prtEventBadge,
 		"prtCatClass":   prtCatClass,
-		"div":           func(a, b int) int { if b == 0 { return 0 }; return a / b },
-		"mod":           func(a, b int) int { if b == 0 { return 0 }; return a % b },
-		"decSign":       func(d decimal.Decimal) int { return d.Sign() },
+		"div": func(a, b int) int {
+			if b == 0 {
+				return 0
+			}
+			return a / b
+		},
+		"mod": func(a, b int) int {
+			if b == 0 {
+				return 0
+			}
+			return a % b
+		},
+		"decSign": func(d decimal.Decimal) int { return d.Sign() },
+		"ver":     func() string { return appVersion },
 	}
 	templ := template.Must(template.New("").Funcs(funcMap).ParseFS(templFS, "templates/*"))
 	router.SetHTMLTemplate(templ) // templates
 
+	router.Use(cacheControlMiddleware())
 	router.StaticFS("/fs/", http.FS(pubFS)) // public
 
 	router.GET("/login/", loginHandler)  // login.go
@@ -66,36 +82,36 @@ func Gui(dirPath, nodePath string) {
 
 	router.Use(userMiddleware()) // middleware_user.go
 
-	router.GET("/", auth.Auth(&authConf), indexHandler)             // index.go
-	router.GET("/config/", auth.Auth(&authConf), configHandler)     // config.go
-	router.GET("/exercise/", auth.Auth(&authConf), exerciseHandler) // exercise.go
-	router.GET("/stats/", auth.Auth(&authConf), statsHandler)       // stats.go
-	router.GET("/weight/", auth.Auth(&authConf), weightHandler)     // weight.go
-	router.GET("/users/", auth.Auth(&authConf), usersHandler)       // users.go
-	router.GET("/prt/", auth.Auth(&authConf), prtListHandler)       // prt.go
-	router.GET("/prt/new", auth.Auth(&authConf), prtFormHandler)    // prt.go
-	router.GET("/prt/edit/:id", auth.Auth(&authConf), prtFormHandler) // prt.go
-	router.GET("/equipment/", auth.Auth(&authConf), equipmentHandler) // equipment.go
+	router.GET("/", auth.Auth(&authConf), indexHandler)                          // index.go
+	router.GET("/config/", auth.Auth(&authConf), configHandler)                  // config.go
+	router.GET("/exercise/", auth.Auth(&authConf), exerciseHandler)              // exercise.go
+	router.GET("/stats/", auth.Auth(&authConf), statsHandler)                    // stats.go
+	router.GET("/weight/", auth.Auth(&authConf), weightHandler)                  // weight.go
+	router.GET("/users/", auth.Auth(&authConf), usersHandler)                    // users.go
+	router.GET("/prt/", auth.Auth(&authConf), prtListHandler)                    // prt.go
+	router.GET("/prt/new", auth.Auth(&authConf), prtFormHandler)                 // prt.go
+	router.GET("/prt/edit/:id", auth.Auth(&authConf), prtFormHandler)            // prt.go
+	router.GET("/equipment/", auth.Auth(&authConf), equipmentHandler)            // equipment.go
 	router.GET("/equipment/suggest", auth.Auth(&authConf), suggestPlatesHandler) // equipment.go
-	router.GET("/plans/", auth.Auth(&authConf), templatesHandler) // templates_page.go
-	router.GET("/plans/edit/:id", auth.Auth(&authConf), templateFormHandler) // templates_page.go
-	router.GET("/plans/json/:id", auth.Auth(&authConf), templateJSONHandler) // templates_page.go
+	router.GET("/plans/", auth.Auth(&authConf), templatesHandler)                // templates_page.go
+	router.GET("/plans/edit/:id", auth.Auth(&authConf), templateFormHandler)     // templates_page.go
+	router.GET("/plans/json/:id", auth.Auth(&authConf), templateJSONHandler)     // templates_page.go
 
-	router.POST("/config/", auth.Auth(&authConf), saveConfigHandler)     // config.go
-	router.POST("/config/auth", auth.Auth(&authConf), saveConfigAuth)    // config.go
-	router.POST("/exercise/", auth.Auth(&authConf), saveExerciseHandler) // exercise.go
-	router.POST("/exdel/", auth.Auth(&authConf), deleteExerciseHandler)  // exercise.go
-	router.POST("/set/", auth.Auth(&authConf), setHandler)               // set.go
-	router.POST("/weight/", auth.Auth(&authConf), addWeightHandler)      // weight.go
-	router.POST("/users/", auth.Auth(&authConf), saveUserHandler)        // users.go
-	router.POST("/userdel/", auth.Auth(&authConf), deleteUserHandler)    // users.go
-	router.POST("/prt/", auth.Auth(&authConf), prtSaveHandler)           // prt.go
-	router.POST("/prtdel/", auth.Auth(&authConf), prtDeleteHandler)      // prt.go
+	router.POST("/config/", auth.Auth(&authConf), saveConfigHandler)       // config.go
+	router.POST("/config/auth", auth.Auth(&authConf), saveConfigAuth)      // config.go
+	router.POST("/exercise/", auth.Auth(&authConf), saveExerciseHandler)   // exercise.go
+	router.POST("/exdel/", auth.Auth(&authConf), deleteExerciseHandler)    // exercise.go
+	router.POST("/set/", auth.Auth(&authConf), setHandler)                 // set.go
+	router.POST("/weight/", auth.Auth(&authConf), addWeightHandler)        // weight.go
+	router.POST("/users/", auth.Auth(&authConf), saveUserHandler)          // users.go
+	router.POST("/userdel/", auth.Auth(&authConf), deleteUserHandler)      // users.go
+	router.POST("/prt/", auth.Auth(&authConf), prtSaveHandler)             // prt.go
+	router.POST("/prtdel/", auth.Auth(&authConf), prtDeleteHandler)        // prt.go
 	router.POST("/equipment/", auth.Auth(&authConf), saveEquipmentHandler) // equipment.go
-	router.POST("/plans/", auth.Auth(&authConf), saveTemplateHandler)    // templates_page.go
+	router.POST("/plans/", auth.Auth(&authConf), saveTemplateHandler)      // templates_page.go
 	router.POST("/plans/del", auth.Auth(&authConf), deleteTemplateHandler) // templates_page.go
-	router.POST("/user/switch", switchUserHandler)                       // middleware_user.go
+	router.POST("/user/switch", switchUserHandler)                         // middleware_user.go
 
-	err := router.Run(address)
+	err = router.Run(address)
 	check.IfError(err)
 }
