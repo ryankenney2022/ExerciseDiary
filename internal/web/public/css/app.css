@@ -28,3 +28,42 @@
 .add-exercise-button {
     width: 9%;
 }
+
+/* ---- Layout system ----------------------------------------------------
+   Pages: put .page-cq on the page's .container-lg, then use the .grid-*
+   classes instead of Bootstrap rows/cols. Grids are single-column by
+   default and gain columns via @container queries on the page container —
+   i.e. based on actual available width, not viewport width. Browsers
+   without container-query support simply keep the single-column layout. */
+.page-cq {
+    container-type: inline-size;
+    container-name: page;
+}
+.grid-2, .grid-8-4, .grid-4-8 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    align-items: start;
+    margin-bottom: 1.5rem;
+}
+.grid-2 > *, .grid-8-4 > *, .grid-4-8 > *, .grid-cards > * { min-width: 0; }
+@container page (min-width: 700px) {
+    .grid-2   { grid-template-columns: 1fr 1fr; }
+    .grid-8-4 { grid-template-columns: 2fr 1fr; }
+    .grid-4-8 { grid-template-columns: 1fr 2fr; }
+}
+/* Card gallery (plans library): as many ~300px columns as fit. */
+.grid-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+/* Form field rows (replaces col-md-4 triplets): fields wrap naturally. */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+    gap: 0.75rem 1rem;
+}
+/* Card whose INTERNALS use @container rules (today table, weight card…). */
+.card-cq { container-type: inline-size; }
