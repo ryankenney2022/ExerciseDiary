@@ -99,3 +99,10 @@
     0%, 100% { transform: scale(1); }
     50%      { transform: scale(1.08); }
 }
+
+/* Plan-builder row: wraps on narrow screens instead of crushing col-2 cells. */
+.plan-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.plan-row .plan-name   { flex: 2 1 12rem; min-width: 0; }
+.plan-row .plan-sets,
+.plan-row .plan-target { flex: 0 1 5rem; min-width: 4rem; }
+.plan-row .plan-note   { flex: 1 1 8rem; min-width: 0; }

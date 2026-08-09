@@ -1,5 +1,5 @@
 {{ define "templates_page.html" }}
-<div class="container-lg mt-4">
+<div class="container-lg page-cq mt-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="mb-0">Workout plans</h4>
     <a href="/plans/edit/new" class="btn btn-primary"><i class="bi bi-plus-lg"></i> New plan</a>
@@ -9,13 +9,13 @@
     <p class="text-muted">No plans yet. Create one with <strong>New plan</strong>, or build a workout and use <strong>Save as plan</strong> on the home page.</p>
   {{ end }}
 
-  <div class="row">
+  <div class="grid-cards">
     {{ range .Templates }}
-    <div class="col-md-6 col-lg-4 mb-3">
+    <div>
       <div class="card border-primary h-100">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <span class="fw-bold">{{ if .Name }}{{ .Name }}{{ else }}(untitled){{ end }}</span>
-          <span class="badge bg-secondary">{{ index $.TemplateCounts .ID }} ex</span>
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-1">
+          <span class="fw-bold text-truncate" style="min-width: 0;">{{ if .Name }}{{ .Name }}{{ else }}(untitled){{ end }}</span>
+          <span class="badge bg-secondary flex-shrink-0">{{ index $.TemplateCounts .ID }} ex</span>
         </div>
         <div class="card-body">
           {{ if .Note }}<p class="small text-muted mb-2">{{ .Note }}</p>{{ end }}

@@ -54,16 +54,16 @@
         const timed = isTimed(ex);
 
         const row = document.createElement("div");
-        row.className = "row g-2 align-items-center mb-2 plan-item-row";
+        row.className = "plan-row plan-item-row mb-2";
         row.id = rid;
         row.innerHTML =
-            '<div class="col-auto plan-drag" style="cursor:grab" title="Drag to reorder"><i class="bi bi-grip-vertical"></i></div>' +
+            '<span class="plan-drag" style="cursor:grab" title="Drag to reorder"><i class="bi bi-grip-vertical"></i></span>' +
             '<input type="hidden" name="ex_id" value="' + (ex ? ex.ID : "") + '">' +
-            '<div class="col"><input list="exerciseOptions" class="form-control plan-ex-name" placeholder="Exercise" value="' + escAttr(exName) + '"></div>' +
-            '<div class="col-2"><input name="target_sets" type="number" min="0" class="form-control" placeholder="Sets" value="' + (prefill.TargetSets || "") + '"></div>' +
-            '<div class="col-2 plan-target">' + targetInputHTML(timed, prefill) + '</div>' +
-            '<div class="col"><input name="item_note" class="form-control" placeholder="Cue / note" value="' + escAttr(prefill.Note) + '"></div>' +
-            '<div class="col-auto"><button type="button" class="btn del-set-button" title="Remove"><i class="bi bi-x-lg"></i></button></div>';
+            '<input list="exerciseOptions" class="form-control plan-name plan-ex-name" placeholder="Exercise" value="' + escAttr(exName) + '">' +
+            '<input name="target_sets" type="number" min="0" class="form-control plan-sets" placeholder="Sets" value="' + (prefill.TargetSets || "") + '">' +
+            '<div class="plan-target">' + targetInputHTML(timed, prefill) + '</div>' +
+            '<input name="item_note" class="form-control plan-note" placeholder="Cue / note" value="' + escAttr(prefill.Note) + '">' +
+            '<button type="button" class="btn del-set-button" title="Remove"><i class="bi bi-x-lg"></i></button>';
         document.getElementById("itemRows").appendChild(row);
 
         // Resolve hidden ex_id and swap target widget when the exercise changes.
