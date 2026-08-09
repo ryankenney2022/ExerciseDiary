@@ -10,6 +10,11 @@ function escapeHTMLAttr(s) {
         .replaceAll(">", "&gt;");
 }
 
+// iOS Safari with "Block All Cookies" throws on ANY sessionStorage access;
+// an unguarded call here used to abort page init entirely.
+function ssGet(key) { try { return window.sessionStorage.getItem(key); } catch (e) { return null; } }
+function ssSet(key, val) { try { window.sessionStorage.setItem(key, val); } catch (e) {} }
+
 // Find the kind of an exercise by name. Returns "cardio" or "strength".
 function kindForName(name) {
     const all = window.allExercises || [];
@@ -190,10 +195,8 @@ window.saveDayAsPlan = function () {
         };
     }).filter(it => it.ExerciseID !== 0);
 
-    try {
-        sessionStorage.setItem('planFromDay', JSON.stringify(items));
-        sessionStorage.setItem('planFromDayName', planName);
-    } catch (e) {}
+    ssSet('planFromDay', JSON.stringify(items));
+    ssSet('planFromDayName', planName);
     window.location.href = '/plans/edit/new';
 };
 
@@ -215,7 +218,7 @@ function insertClusterGrouped(tbody, newRows, group, name) {
         </td>`;
         tbody.appendChild(header);
         // Restore collapsed state from sessionStorage.
-        if (sessionStorage.getItem('todayexCollapsed:' + group) === '1') {
+        if (ssGet('todayexCollapsed:' + group) === '1') {
             header.classList.add('todayex-group-collapsed');
         }
     }
@@ -314,10 +317,8 @@ function toggleGroupCollapse(group) {
             if (willCollapse) tr.classList.add('d-none');
             else tr.classList.remove('d-none');
         });
-    try {
-        if (willCollapse) sessionStorage.setItem('todayexCollapsed:' + group, '1');
-        else sessionStorage.removeItem('todayexCollapsed:' + group);
-    } catch (e) {}
+    if (willCollapse) ssSet('todayexCollapsed:' + group, '1');
+    else { try { sessionStorage.removeItem('todayexCollapsed:' + group); } catch (e) {} }
 }
 
 function renderStrengthRow(rowId, name, obj) {
@@ -706,7 +707,7 @@ function toggleCardioAdvanced(rowId) {
 }
 
 function setFormContent(sets, date) {
-    window.sessionStorage.setItem("today", date);
+    ssSet("today", date);
     document.getElementById('todayEx').innerHTML = "";
     document.getElementById("formDate").value = date;
     document.getElementById("realDate").value = date;
@@ -725,9 +726,9 @@ function setFormContent(sets, date) {
 function setFormDate(sets) {
     today = document.getElementById("realDate").value;
     if (!today) {
-        today = window.sessionStorage.getItem("today");
+        today = ssGet("today");
         if (!today) {
-            today = new Date().toJSON().slice(0, 10);
+            today = new Date().toLocaleDateString('en-CA');
         }
     }
     setFormContent(sets, today);

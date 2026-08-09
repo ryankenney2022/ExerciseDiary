@@ -15,8 +15,10 @@ function splitWeight(weight, show) {
 };
 
 function weightChart(id, dates, ws, wcolor, xticks) {
-    
-    const ctx = document.getElementById(id);
+
+    const el = document.getElementById(id);
+    if (!el) return;
+    const ctx = el;
 
     if (wChart){
       wChart.clear();

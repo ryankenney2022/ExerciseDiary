@@ -16,8 +16,10 @@ function lowerData(heat) {
 };
 
 function makeChart(heat, hcolor, sets) {
+    const el = document.getElementById('matrix-chart');
+    if (!el) return;
     let ldata = lowerData(heat);
-    var ctx = document.getElementById('matrix-chart').getContext('2d');
+    var ctx = el.getContext('2d');
     window.myMatrix = new Chart(ctx, {
         type: 'matrix',
         data: {
