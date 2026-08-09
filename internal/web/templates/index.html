@@ -1,13 +1,11 @@
 {{ define "index.html" }}
-</head>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
-<script src="/fs/public/js/heatmap.js"></script>
-<script src="/fs/public/js/index.js"></script>
-<script src="/fs/public/js/weight-chart.js"></script>
-<script src="/fs/public/js/plates.js"></script>
-<script src="/fs/public/js/rest-timer.js"></script>
-<link rel="stylesheet" type="text/css" href="/fs/public/css/index.css" />
-<body>
+<script src="/fs/public/js/heatmap.js?v={{ ver }}"></script>
+<script src="/fs/public/js/index.js?v={{ ver }}"></script>
+<script src="/fs/public/js/weight-chart.js?v={{ ver }}"></script>
+<script src="/fs/public/js/plates.js?v={{ ver }}"></script>
+<script src="/fs/public/js/rest-timer.js?v={{ ver }}"></script>
+<link rel="stylesheet" type="text/css" href="/fs/public/css/index.css?v={{ ver }}" />
 <!-- Add Weight Modal -->
 <div class="modal" id="mWeight">
   <div class="modal-dialog" role="document">

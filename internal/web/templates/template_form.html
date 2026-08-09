@@ -1,7 +1,5 @@
 {{ define "template_form.html" }}
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
-
-<body>
 <div class="container-lg mt-4">
   <form action="/plans/" method="post" id="planForm">
     <input type="hidden" name="template_id" value="{{ .OneTemplate.ID }}">
@@ -41,7 +39,7 @@
   window.allExercises  = {{ .ExData.Exs }};
   window.templateItems = {{ .OneTemplate.Items }};
 </script>
-<script src="/fs/public/js/plans.js"></script>
+<script src="/fs/public/js/plans.js?v={{ ver }}"></script>
 
 {{ template "footer.html" }}
 {{ end }}

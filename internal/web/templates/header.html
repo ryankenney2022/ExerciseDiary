@@ -5,7 +5,7 @@
 <head>
     <title>Exercise Diary</title>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!--Favicon-->
     <link rel="icon" type="image/x-icon" href="/fs/public/favicon.png">
     {{ if eq .Config.NodePath "" }}
@@ -25,9 +25,10 @@
     <script src="{{ .Config.NodePath }}/node_modules/chart.js/dist/chart.umd.js"></script>
     <script src="{{ .Config.NodePath }}/node_modules/chartjs-chart-matrix/dist/chartjs-chart-matrix.min.js"></script>
     {{ end }}
+    <link rel="stylesheet" href="/fs/public/css/app.css?v={{ ver }}">
 </head>
 <body>
-    <nav class="navbar navbar-expand-sm navbar-dark bg-primary">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-lg">
           <a class="navbar-brand" href="/">
             <img src="/fs/public/favicon.png" style="width: 2em"/>
@@ -38,8 +39,7 @@
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle active px-2" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="bi bi-person-circle"></i>
-                <span class="d-none d-sm-inline">{{ if .CurrentUser.ID }}{{ .CurrentUser.Name }}{{ else }}No user{{ end }}</span>
-                <span class="d-inline d-sm-none ms-1">{{ if .CurrentUser.ID }}{{ .CurrentUser.Name }}{{ else }}—{{ end }}</span>
+                <span class="ms-1">{{ if .CurrentUser.ID }}{{ .CurrentUser.Name }}{{ else }}No user{{ end }}</span>
               </a>
               <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                 {{ range .Users }}
@@ -63,7 +63,7 @@
           </button>
 
           <div class="collapse navbar-collapse" id="navbarsExample03">
-            <ul class="navbar-nav me-auto mb-2 mb-sm-0">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
               <li class="nav-item">
                 <a class="nav-link active" href="/exercise/?id=new">Add</a>
               </li>

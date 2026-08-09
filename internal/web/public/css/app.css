@@ -1,0 +1,30 @@
+/* app.css — shared layout system + components, loaded on every page (header.html). */
+.exercise-button, .add-exercise-button, .del-set-button {
+    height: 100%;
+    background-color: #00000000;
+    /* Use the theme's high-contrast foreground so icons read clearly on dark
+       themes (was var(--bs-primary), which blended into the navbar/cards). */
+    color: var(--bs-body-color);
+    text-align: center;
+}
+.exercise-button:hover, .add-exercise-button:hover, .del-set-button:hover {
+    background-color: #0000001a;
+    /* On hover, hint at action with the theme accent. */
+    color: var(--bs-emphasis-color, var(--bs-body-color));
+}
+/* Semantic-color overrides (e.g. trash) keep their meaning — don't let the
+   default body color rule above strip the red. */
+.del-set-button.text-danger,
+.del-set-button.text-danger:hover { color: var(--bs-danger) !important; }
+.del-set-button.text-success,
+.del-set-button.text-success:hover { color: var(--bs-success) !important; }
+
+.exercise-button {
+    width: 70%;
+    text-align: left;
+    color: var(--bs-body-color);
+}
+
+.add-exercise-button {
+    width: 9%;
+}

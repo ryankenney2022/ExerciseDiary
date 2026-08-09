@@ -1,6 +1,4 @@
 {{ define "equipment.html" }}
-
-<body>
 <div class="container-lg mt-4">
   <div class="row">
     <div class="col-lg-7 mb-4">
@@ -71,7 +69,7 @@
   </div>
 </div>
 
-<script src="/fs/public/js/plates.js"></script>
+<script src="/fs/public/js/plates.js?v={{ ver }}"></script>
 <script>
 function addPlateRow() {
   const tbody = document.getElementById('plateRows');

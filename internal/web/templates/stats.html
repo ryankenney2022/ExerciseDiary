@@ -1,9 +1,7 @@
 {{ define "stats.html" }}
-</head>
-<script src="/fs/public/js/stats.js"></script>
-<script src="/fs/public/js/weight-chart.js"></script>
-<link rel="stylesheet" type="text/css" href="/fs/public/css/index.css" />
-<body>
+<script src="/fs/public/js/stats.js?v={{ ver }}"></script>
+<script src="/fs/public/js/weight-chart.js?v={{ ver }}"></script>
+<link rel="stylesheet" type="text/css" href="/fs/public/css/index.css?v={{ ver }}" />
     <div class="container-lg mt-4">
         {{ if .CardioSummary.SessionCount }}
         <div class="row mb-3">
