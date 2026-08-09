@@ -1,7 +1,7 @@
 {{ define "prt_form.html" }}
-<div class="container-lg mt-4">
-  <div class="row">
-    <div class="col-lg-7 mb-4">
+<div class="container-lg mt-4 page-cq">
+  <div class="grid-8-4">
+    <div class="mb-4">
       <div class="card border-primary">
         <div class="card-header">
           {{ if .OnePRT.ID }}Edit PRT — {{ .OnePRT.Date }}{{ else }}New PRT{{ end }}
@@ -17,20 +17,20 @@
                      {{ if not .OnePRT.Date }}id="dateInputToday"{{ end }}>
             </div>
 
-            <div class="row g-3">
-              <div class="col-md-4">
+            <div class="form-grid">
+              <div>
                 <label class="form-label">Pushups (count)</label>
                 <input name="pushups" type="number" min="0" class="form-control"
                        value="{{ if .OnePRT.Pushups }}{{ .OnePRT.Pushups }}{{ end }}"
                        placeholder="leave blank if skipped">
               </div>
-              <div class="col-md-4">
+              <div>
                 <label class="form-label">Forearm plank (mm:ss)</label>
                 <input name="plank_mmss" type="text" pattern="^\d+:[0-5]\d$" class="form-control"
                        value="{{ prtMMSS .OnePRT.PlankSeconds }}"
                        placeholder="e.g. 2:30">
               </div>
-              <div class="col-md-4">
+              <div>
                 <label class="form-label">1.5-mile run (mm:ss)</label>
                 <input name="run_mmss" type="text" pattern="^\d+:[0-5]\d$" class="form-control"
                        value="{{ prtMMSS .OnePRT.RunSeconds }}"
@@ -52,7 +52,7 @@
       </div>
     </div>
 
-    <div class="col-lg-5 mb-4">
+    <div class="mb-4">
       <div class="card border-secondary">
         <div class="card-header">Scoring uses</div>
         <div class="card-body">

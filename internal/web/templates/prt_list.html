@@ -1,6 +1,6 @@
 {{ define "prt_list.html" }}
-<div class="container-lg mt-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
+<div class="container-lg mt-4 page-cq">
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
     <h3 class="mb-0">PRT — {{ .CurrentUser.Name }}</h3>
     <a href="/prt/new" class="btn btn-primary"><i class="bi bi-plus-square"></i> New PRT</a>
   </div>
@@ -29,23 +29,23 @@
         <tbody>
           {{ range .PRTTests }}
           <tr>
-            <td><a href="/prt/edit/{{ .ID }}">{{ .Date }}</a></td>
+            <td class="text-nowrap"><a href="/prt/edit/{{ .ID }}">{{ .Date }}</a></td>
             <td>
               {{ if .Pushups }}
                 {{ .Pushups }}{{ if .PushupScore }} <span class="text-muted small">({{ .PushupScore }} pts)</span>{{ end }}
-                <div class="mt-1">{{ prtEventBadge .SexAtTest .AgeAtTest .AltitudeAtTest "pushups" .Pushups }}</div>
+                <div class="mt-1 text-nowrap">{{ prtEventBadge .SexAtTest .AgeAtTest .AltitudeAtTest "pushups" .Pushups }}</div>
               {{ else }}—{{ end }}
             </td>
             <td>
               {{ if .PlankSeconds }}
                 {{ prtMMSS .PlankSeconds }}{{ if .PlankScore }} <span class="text-muted small">({{ .PlankScore }} pts)</span>{{ end }}
-                <div class="mt-1">{{ prtEventBadge .SexAtTest .AgeAtTest .AltitudeAtTest "plank" .PlankSeconds }}</div>
+                <div class="mt-1 text-nowrap">{{ prtEventBadge .SexAtTest .AgeAtTest .AltitudeAtTest "plank" .PlankSeconds }}</div>
               {{ else }}—{{ end }}
             </td>
             <td>
               {{ if .RunSeconds }}
                 {{ prtMMSS .RunSeconds }}{{ if .RunScore }} <span class="text-muted small">({{ .RunScore }} pts)</span>{{ end }}
-                <div class="mt-1">{{ prtEventBadge .SexAtTest .AgeAtTest .AltitudeAtTest "run" .RunSeconds }}</div>
+                <div class="mt-1 text-nowrap">{{ prtEventBadge .SexAtTest .AgeAtTest .AltitudeAtTest "run" .RunSeconds }}</div>
               {{ else }}—{{ end }}
             </td>
             <td>
