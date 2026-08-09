@@ -2,18 +2,18 @@
 <script src="/fs/public/js/weight.js?v={{ ver }}"></script>
 <script src="/fs/public/js/weight-chart.js?v={{ ver }}"></script>
 <link rel="stylesheet" type="text/css" href="/fs/public/css/index.css?v={{ ver }}" />
-    <div class="container-lg mt-4">
-    <div class="row">
-        <div class="col-md-4 mb-4">
+    <div class="container-lg mt-4 page-cq">
+    <div class="grid-4-8">
+        <div>
             <div class="card border-primary">
                 <div class="card-header">Weight</div>
                 <div class="card-body table-responsive">
                 <table class="table table-borderless">
                     <thead>
-                        <th class="col-1"></th>
-                        <th class="col-4">Date</th>
-                        <th class="col-4">Weight</th>
-                        <th class="col-3 text-end">Actions</th>
+                        <th></th>
+                        <th>Date</th>
+                        <th>Weight</th>
+                        <th class="text-end">Actions</th>
                     </thead>
                     <tbody id="weightList">
                     </tbody>
@@ -25,7 +25,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-8">
+        <div>
             <div class="card border-primary mb-4">
                 <div class="card-header">Chart</div>
                 <div class="card-body">
@@ -37,12 +37,16 @@
             <div class="card border-primary mb-4">
                 <div class="card-header">Add / edit</div>
                 <div class="card-body">
-                    <form action="/weight/" method="post" name="sets" class="input-group">
-                        <input type="hidden" name="id" id="weightId" value="">
-                        <input name="date" type="date" class="form-control" id="todayDate">
-                        <input name="weight" type="number" step="any" min="0" class="form-control" id="weightValue">
-                        <button type="submit" class="btn btn-primary" id="weightSubmit">Add</button>
-                        <button type="button" class="btn btn-outline-secondary d-none" id="weightCancel" onclick="cancelEditWeight()">Cancel</button>
+                    <form action="/weight/" method="post" name="sets">
+                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <input type="hidden" name="id" id="weightId" value="">
+                            <input name="date" type="date" class="form-control" style="flex: 1 1 10rem; min-width: 8rem;" id="todayDate">
+                            <input name="weight" type="number" step="any" min="0" class="form-control" style="flex: 1 1 7rem; min-width: 6rem;" id="weightValue">
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary" id="weightSubmit">Add</button>
+                                <button type="button" class="btn btn-outline-secondary d-none" id="weightCancel" onclick="cancelEditWeight()">Cancel</button>
+                            </div>
+                        </div>
                     </form>
                 </div>
             </div>
