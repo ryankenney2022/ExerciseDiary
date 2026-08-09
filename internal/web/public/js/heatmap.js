@@ -102,4 +102,8 @@ function makeChart(heat, hcolor, sets) {
             }
         }
     });
-};    
+
+    // Open scrolled to the most recent weeks (right edge).
+    const scroller = el.closest('.horiz-scroll');
+    if (scroller) scroller.scrollLeft = scroller.scrollWidth;
+};

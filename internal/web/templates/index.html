@@ -39,20 +39,20 @@
   </div>
 </div>
 <!-- End Modal -->
-<div class="container-lg mt-4">
-  <div class="row">
-    <div class="col-md-8 mb-4">
+<div class="container-lg mt-4 page-cq">
+  <div class="grid-8-4">
+    <div>
       <div class="card border-primary">
         <div class="card-body">
           <div class="horiz-scroll">
-              <div style="height: 100px; width: 770px;">
+              <div style="height: 100px; min-width: 700px;">
                   <canvas id="matrix-chart" style="height: 100%; width: 100%;"></canvas>
               </div>
           </div>
         </div>
       </div>
     </div>
-    <div class="col-md-4 mb-4" id="weightCardCol">
+    <div id="weightCardCol">
       <div class="card border-primary">
         <div class="card-header d-flex justify-content-between align-items-center py-1">
           <span class="small text-muted">Weight</span>
@@ -60,13 +60,13 @@
             <i class="bi bi-eye-slash"></i>
           </button>
         </div>
-        <div class="card-body" style="overflow-x: auto;">
-          <div class="d-flex align-items-center mb-2">
-            <div class="me-3">
+        <div class="card-body">
+          <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
+            <div>
               <div class="display-6 mb-0" id="weightLastNumber">—</div>
               <div class="text-muted small">last weight</div>
             </div>
-            <div class="me-3" id="bmiBlock">
+            <div id="bmiBlock">
               <div id="bmiValue" class="h4 mb-0">—</div>
               <div><span id="bmiBadge" class="badge bg-secondary">BMI</span></div>
             </div>
@@ -87,15 +87,15 @@
         </div>
       </div>
     </div>
-    <div class="col-md-4 mb-4 d-none" id="weightShowCol">
+    <div class="d-none" id="weightShowCol">
       <button type="button" class="btn btn-sm btn-outline-secondary" onclick="showWeightCard()">
         <i class="bi bi-eye"></i> Show weight
       </button>
     </div>
   </div>
   {{ if or .LastPRT.ID .ScoreSheet }}
-  <div class="row">
-    <div class="col-md-6 mb-4">
+  <div>
+    <div>
       {{ if .LastPRT.ID }}
       <div class="card border-primary">
         <div class="card-header d-flex justify-content-between">
@@ -138,8 +138,8 @@
     </div>
   </div>
   {{ end }}
-    <div class="row">
-        <div class="col-md mb-4">
+    <div class="grid-2">
+        <div>
             <div class="input-group mb-2">
                 <span class="input-group-text"><i class="bi bi-search"></i></span>
                 <input type="text" id="exSearch" class="form-control" placeholder="Search exercises..." autocomplete="off" oninput="filterAccordion(this.value)">
@@ -157,8 +157,8 @@
                     </h2>
                     <div id="{{ $grID }}" class="accordion-collapse collapse">
                       <div class="accordion-body">
-                        <div class="row">
-                        <div class="col-md-11">
+                        <div class="d-flex gap-2">
+                        <div class="flex-grow-1" style="min-width: 0;">
                         {{ range $.ExData.Exs }}
                         {{ if eq .Group $gr }}
                         <div class="hstack gap-2 align-items-center mb-1">
@@ -219,7 +219,7 @@
                         {{ end }}
                         {{ end }}
                         </div>
-                        <div class="col-md-1">
+                        <div class="flex-shrink-0">
                           <button class="btn del-set-button" title="Add group" onclick='addAllGroup({{ $.ExData.Exs }}, {{ $gr }})'>
                             <i class="bi bi-chevron-compact-right"></i>
                           </button>
@@ -228,24 +228,20 @@
                       </div>
                     </div>
                   </div>
-                {{ end }}              
+                {{ end }}
               </div>
         </div>
-        <div class="col-md mb-4">
-            <div class="card border-primary">
+        <div>
+            <div class="card border-primary card-cq">
                 <div class="card-header">
-                  <div class="row">
-                    <div class="col-md-2"></div>
-                    <div class="col-md hstack">
+                  <div class="d-flex align-items-center gap-2">
                       <button onclick='moveDayLeftRight(-1, {{ .ExData.Sets }})' class="btn del-set-button">
                         <i class="bi bi-arrow-left-square"></i>
                       </button>
-                      <input type="date" class="m-auto form-control" onchange='setFormDate({{ .ExData.Sets }})' id="realDate" style="width: 70%;">
+                      <input type="date" class="form-control flex-grow-1" onchange='setFormDate({{ .ExData.Sets }})' id="realDate" style="min-width: 0;">
                       <button onclick='moveDayLeftRight(+1, {{ .ExData.Sets }})' class="btn del-set-button">
                         <i class="bi bi-arrow-right-square"></i>
                       </button>
-                    </div>
-                    <div class="col-md-2"></div>
                   </div>
                 </div>
                 <div class="card-body">
@@ -273,16 +269,18 @@
                           <th class="todayex-name">Name</th>
                           <th class="todayex-weight">Wt&nbsp;/&nbsp;Dist</th>
                           <th class="todayex-reps">Reps&nbsp;/&nbsp;Time</th>
-                          <th class="todayex-note d-none d-md-table-cell">Note</th>
+                          <th class="todayex-note">Note</th>
                           <th class="todayex-del"></th>
                       </thead>
                       <tbody id="todayEx"></tbody>
                     </table>
                   </div>
-                  <button type="submit" class="btn btn-primary">Save</button>
-                  <button type="button" class="btn btn-outline-secondary btn-sm" onclick="saveDayAsPlan()">
-                    <i class="bi bi-bookmark-plus"></i> Save as plan
-                  </button>
+                  <div class="d-flex flex-wrap gap-2">
+                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="saveDayAsPlan()">
+                      <i class="bi bi-bookmark-plus"></i> Save as plan
+                    </button>
+                  </div>
                 </form>
                 </div>
             </div>

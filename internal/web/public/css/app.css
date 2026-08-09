@@ -20,13 +20,14 @@
 .del-set-button.text-success:hover { color: var(--bs-success) !important; }
 
 .exercise-button {
-    width: 70%;
+    flex: 1 1 auto;
+    min-width: 0;
     text-align: left;
     color: var(--bs-body-color);
 }
 
 .add-exercise-button {
-    width: 9%;
+    flex: 0 0 auto;
 }
 
 /* ---- Layout system ----------------------------------------------------

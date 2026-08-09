@@ -1,23 +1,17 @@
-@media (max-width: 1399px) {
-    .horiz-scroll {
-        direction: rtl;
-        overflow-x: scroll;
-    }
-}
+.horiz-scroll { overflow-x: auto; }
 
-/* Today's-sets table column sizing.
-   On mobile (Note column hidden): Name 50%, Weight 22%, Reps 22%, Del 6%.
-   On md+ (Note visible):          Name 38%, Weight 18%, Reps 18%, Note 20%, Del 6%.
-   This keeps the exercise name readable instead of being squeezed. */
+/* Today's-sets column sizing, keyed to the CARD's width (container query),
+   not the viewport — the card may be a half column on wide screens. */
 .table-todayex .todayex-name   { width: 50%; }
 .table-todayex .todayex-weight { width: 22%; }
 .table-todayex .todayex-reps   { width: 22%; }
 .table-todayex .todayex-del    { width:  6%; }
-@media (min-width: 768px) {
+.table-todayex .todayex-note   { display: none; }
+@container (min-width: 620px) {
     .table-todayex .todayex-name   { width: 38%; }
     .table-todayex .todayex-weight { width: 18%; }
     .table-todayex .todayex-reps   { width: 18%; }
-    .table-todayex .todayex-note   { width: 20%; }
+    .table-todayex .todayex-note   { display: table-cell; width: 20%; }
     .table-todayex .todayex-del    { width:  6%; }
 }
 /* Make the Name input use the full column so long exercise names don't truncate. */

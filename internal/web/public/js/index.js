@@ -352,7 +352,7 @@ function renderStrengthRow(rowId, name, obj) {
             <button type="button" class="btn btn-sm" tabindex="-1" onclick="bumpNum(${rowId}, 'reps', -1, 0)">−</button>
             <button type="button" class="btn btn-sm" tabindex="-1" onclick="bumpNum(${rowId}, 'reps', +1, 0)">+</button>
         </div>
-    </td><td class="todayex-note d-none d-md-table-cell">
+    </td><td class="todayex-note">
         <input name="note" type="text" class="form-control" placeholder="(optional)" value="${safeNote}">
         <input type="hidden" name="duration_mmss" value="">
         <input type="hidden" name="distance_value" value="0">
@@ -407,7 +407,7 @@ function renderTimedStrengthRow(rowId, name, obj) {
     </td><td class="todayex-reps">
         <input name="duration_mmss" type="text" pattern="^\\d+:[0-5]\\d$" class="form-control todayex-timed-mmss" placeholder="mm:ss" value="${safeDur}">
         <input type="hidden" name="reps" value="0">
-    </td><td class="todayex-note d-none d-md-table-cell">
+    </td><td class="todayex-note">
         <input name="note" type="text" class="form-control" placeholder="(optional)" value="${safeNote}">
         <input type="hidden" name="distance_value" value="0">
         <input type="hidden" name="avg_hr" value="0">
@@ -663,7 +663,7 @@ function renderCardioRow(rowId, name, obj) {
     </td><td class="todayex-reps">
         <input name="duration_mmss" type="text" pattern="^\\d+:[0-5]\\d$" class="form-control" placeholder="mm:ss" value="${safeDurMMSS}">
         <input type="hidden" name="reps" value="0">
-    </td><td class="todayex-note d-none d-md-table-cell">
+    </td><td class="todayex-note">
         <input name="note" type="text" class="form-control" placeholder="(optional)" value="${safeNote}">
     </td><td class="todayex-del">
         <div class="vstack gap-1 align-items-end">
