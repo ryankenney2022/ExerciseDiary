@@ -16,7 +16,8 @@ func parseVersion(b []byte) string {
 }
 
 // cacheControlMiddleware marks /fs/ static assets immutable. Safe because
-// every local asset URL carries a ?v={{ ver }} param that changes each release.
+// every /fs/ reference (JS, CSS, favicon) carries a ?v={{ ver }} param, so a
+// release bumps the query string and busts the cache.
 func cacheControlMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if strings.HasPrefix(c.Request.URL.Path, "/fs/") {

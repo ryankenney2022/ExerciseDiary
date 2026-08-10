@@ -2,8 +2,10 @@
 //
 // Activated when window.restTimer.enabled is true (set from the user profile).
 // index.js calls window.onStrengthSetAdded() right after every strength row is
-// added; this module restarts a floating countdown chip pinned to the bottom
-// of the today-workout column.
+// added; this module restarts a floating countdown chip pinned to the
+// top-right of the viewport, below the navbar (not the bottom of the
+// today-workout column — iOS Safari's bottom toolbar/keyboard would hide a
+// bottom-anchored chip).
 //
 // When the timer hits zero:
 //   - Chip background flashes green

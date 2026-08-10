@@ -8,6 +8,14 @@
 (function () {
     let rowSeq = 0;
 
+    // sessionStorage can throw under iOS "Block All Cookies" (and similar
+    // privacy modes) even on a plain getItem/setItem/removeItem call. Route
+    // every access through these guards so a blocked storage API can't abort
+    // init before existing plan items render.
+    function ssGet(key) { try { return window.sessionStorage.getItem(key); } catch (e) { return null; } }
+    function ssSet(key, val) { try { window.sessionStorage.setItem(key, val); } catch (e) {} }
+    function ssRemove(key) { try { window.sessionStorage.removeItem(key); } catch (e) {} }
+
     function escAttr(s) {
         return String(s == null ? "" : s)
             .replace(/&/g, "&amp;").replace(/"/g, "&quot;")
@@ -87,15 +95,15 @@
         // Prefill source: "save as plan" stash (sessionStorage) wins, else the
         // existing template's items, else a single empty row.
         let items = window.templateItems || [];
-        const stash = sessionStorage.getItem("planFromDay");
+        const stash = ssGet("planFromDay");
         if (stash) {
             try { items = JSON.parse(stash); } catch (e) { items = []; }
-            sessionStorage.removeItem("planFromDay");
-            const nm = sessionStorage.getItem("planFromDayName");
+            ssRemove("planFromDay");
+            const nm = ssGet("planFromDayName");
             if (nm) {
                 const nameEl = document.getElementById("planName");
                 if (nameEl) nameEl.value = nm;
-                sessionStorage.removeItem("planFromDayName");
+                ssRemove("planFromDayName");
             }
         }
 
