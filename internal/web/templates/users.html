@@ -1,7 +1,7 @@
 {{ define "users.html" }}
-<div class="container-lg mt-4">
-  <div class="row">
-    <div class="col-lg-7 mb-4">
+<div class="container-lg mt-4 page-cq">
+  <div class="grid-8-4">
+    <div>
       <div class="card border-primary">
         <div class="card-header">Users</div>
         <div class="card-body">
@@ -10,11 +10,11 @@
             {{ range .Users }}
             <div class="accordion-item">
               <h2 class="accordion-header">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#user{{ .ID }}" aria-expanded="false">
+                <button class="accordion-button collapsed flex-wrap" type="button" data-bs-toggle="collapse" data-bs-target="#user{{ .ID }}" aria-expanded="false">
                   <span style="display:inline-block;width:1em;height:1em;border-radius:50%;background-color:{{ .Color }};margin-right:0.5em;border:1px solid #888"></span>
                   {{ .Name }}
-                  {{ if eq .ID $.CurrentUser.ID }}<span class="badge bg-primary ms-2">current</span>{{ end }}
-                  {{ if .Sex }}<span class="badge bg-secondary ms-2">{{ .Sex }}</span>{{ end }}
+                  {{ if eq .ID $.CurrentUser.ID }}<span class="badge bg-primary ms-2 flex-shrink-0">current</span>{{ end }}
+                  {{ if .Sex }}<span class="badge bg-secondary ms-2 flex-shrink-0">{{ .Sex }}</span>{{ end }}
                   {{ if .DOB }}<small class="text-muted ms-2">DOB {{ .DOB }}</small>{{ end }}
                 </button>
               </h2>
@@ -22,16 +22,16 @@
                 <div class="accordion-body">
                   <form action="/users/" method="post">
                     <input type="hidden" name="id" value="{{ .ID }}">
-                    <div class="row g-3">
-                      <div class="col-md-6">
+                    <div class="form-grid">
+                      <div>
                         <label class="form-label">Name</label>
                         <input name="name" type="text" class="form-control" value="{{ .Name }}" required maxlength="40">
                       </div>
-                      <div class="col-md-6">
+                      <div>
                         <label class="form-label">Color</label>
                         <input name="color" type="color" class="form-control form-control-color" value="{{ .Color }}">
                       </div>
-                      <div class="col-md-4">
+                      <div>
                         <label class="form-label">Sex (for PRT)</label>
                         <select name="sex" class="form-select">
                           <option value=""  {{ if eq .Sex "" }}selected{{ end }}>—</option>
@@ -39,25 +39,25 @@
                           <option value="F" {{ if eq .Sex "F" }}selected{{ end }}>Female</option>
                         </select>
                       </div>
-                      <div class="col-md-4">
+                      <div>
                         <label class="form-label">Date of birth</label>
                         <input name="dob" type="date" class="form-control" value="{{ .DOB }}">
                       </div>
-                      <div class="col-md-4">
+                      <div>
                         <label class="form-label">Altitude</label>
                         <select name="altitude" class="form-select">
                           <option value="low"  {{ if eq .Altitude "low" }}selected{{ end }}>&lt;5000 ft</option>
                           <option value="high" {{ if eq .Altitude "high" }}selected{{ end }}>≥5000 ft</option>
                         </select>
                       </div>
-                      <div class="col-md-4">
+                      <div>
                         <label class="form-label">Distance unit (cardio)</label>
                         <select name="distance_unit" class="form-select">
                           <option value="mi" {{ if ne .DistanceUnit "km" }}selected{{ end }}>Miles</option>
                           <option value="km" {{ if eq .DistanceUnit "km" }}selected{{ end }}>Kilometers</option>
                         </select>
                       </div>
-                      <div class="col-md-12">
+                      <div style="grid-column: 1 / -1;">
                         <div class="form-check">
                           <input class="form-check-input" type="checkbox" name="rest_timer_on" value="1" id="restTimerOn{{ .ID }}" {{ if eq .RestTimerOn 1 }}checked{{ end }}>
                           <label class="form-check-label" for="restTimerOn{{ .ID }}">
@@ -65,12 +65,12 @@
                           </label>
                         </div>
                       </div>
-                      <div class="col-md-4">
+                      <div>
                         <label class="form-label">Rest duration (seconds)</label>
                         <input name="rest_timer_seconds" type="number" min="5" step="5" class="form-control" value="{{ if .RestTimerSeconds }}{{ .RestTimerSeconds }}{{ else }}90{{ end }}">
                       </div>
 
-                      <div class="col-md-12">
+                      <div style="grid-column: 1 / -1;">
                         <hr class="my-1">
                         <div class="form-check">
                           <input class="form-check-input" type="checkbox" name="bmi_enabled" value="1" id="bmiOn{{ .ID }}" {{ if eq .BMIEnabled 1 }}checked{{ end }}>
@@ -79,7 +79,7 @@
                           </label>
                         </div>
                       </div>
-                      <div class="col-md-6">
+                      <div>
                         <label class="form-label">Height</label>
                         <div class="input-group">
                           <input name="height_feet" type="number" min="0" max="9" class="form-control" placeholder="ft"
@@ -91,7 +91,7 @@
                         </div>
                         <div class="form-text">Or enter inches only in the "in" field.</div>
                       </div>
-                      <div class="col-md-6">
+                      <div>
                         <label class="form-label">Goal weight ({{ if eq .DistanceUnit "km" }}kg{{ else }}lb{{ end }}, optional)</label>
                         <input name="goal_weight" type="number" step="any" min="0" class="form-control" value="{{ if gt (decSign .GoalWeight) 0 }}{{ .GoalWeight }}{{ end }}" placeholder="e.g. 200">
                       </div>
@@ -118,7 +118,7 @@
       </div>
     </div>
 
-    <div class="col-lg-5 mb-4">
+    <div>
       <div class="card border-primary">
         <div class="card-header">Add user</div>
         <div class="card-body">

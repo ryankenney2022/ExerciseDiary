@@ -1,7 +1,7 @@
 {{ define "equipment.html" }}
-<div class="container-lg mt-4">
-  <div class="row">
-    <div class="col-lg-7 mb-4">
+<div class="container-lg mt-4 page-cq">
+  <div class="grid-8-4">
+    <div>
       <div class="card border-primary">
         <div class="card-header">Barbell &amp; plates</div>
         <div class="card-body">
@@ -18,12 +18,13 @@
               For example, two pairs of 25-lb plates = four 25-lb plates total.
             </p>
 
+            <div class="table-responsive">
             <table class="table table-sm table-borderless align-middle">
               <thead>
                 <tr>
                   <th>Plate weight (lb)</th>
-                  <th style="width:9em">Pairs owned</th>
-                  <th style="width:3em"></th>
+                  <th class="text-nowrap">Pairs owned</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody id="plateRows">
@@ -36,6 +37,7 @@
                 {{ end }}
               </tbody>
             </table>
+            </div>
 
             <div class="mb-3">
               <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addPlateRow()">
@@ -49,7 +51,7 @@
       </div>
     </div>
 
-    <div class="col-lg-5 mb-4">
+    <div>
       <div class="card border-secondary">
         <div class="card-header">Try it</div>
         <div class="card-body">
