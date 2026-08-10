@@ -1,97 +1,83 @@
 {{ define "exercise.html" }}
-    <div class="container-lg mt-4">
-    <div class="row">
-        <div class="col-md mb-4">
-        <div class="card border-primary">
+    <div class="container-lg mt-4 page-cq">
+    <div class="grid-2">
+        <div>
+        <div class="card border-primary mb-4">
             <div class="card-header">Exercise</div>
-        <div class="card-body table-responsive">
-        <table class="table table-borderless">
-            <form action="/exercise/" method="post">
+        <div class="card-body">
+            <form id="exerciseForm" action="/exercise/" method="post">
                 <input name="id" type="hidden" value="{{ .OneEx.ID }}">
-                <tr>
-                    <td>Kind</td>
-                    <td>
-                        <select name="kind" class="form-select" id="kindSelect" onchange="toggleKindRows(this.value)">
-                            <option value="strength" {{ if ne .OneEx.Kind "cardio" }}selected{{ end }}>Strength (weight × reps)</option>
-                            <option value="cardio"   {{ if eq .OneEx.Kind "cardio" }}selected{{ end }}>Cardio (distance + duration)</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr class="ex-strength-only"{{ if eq .OneEx.Kind "cardio" }} style="display:none"{{ end }}>
-                    <td>Mode</td>
-                    <td>
-                        <select name="mode" class="form-select">
-                            <option value="reps"  {{ if ne .OneEx.Mode "timed" }}selected{{ end }}>Reps (weight × reps)</option>
-                            <option value="timed" {{ if eq .OneEx.Mode "timed" }}selected{{ end }}>Timed (duration only — plank, hold)</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Group</td>
-                    <td>
-                        <input name="group" type="text" class="form-control" list="exGroupsList"
-                               placeholder="Pick from list or type a new group"
-                               autocomplete="off" value="{{ .OneEx.Group }}">
-                        <datalist id="exGroupsList">
-                            {{ range .ExGroups }}<option value="{{ . }}"></option>{{ end }}
-                        </datalist>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Place in group</td>
-                    <td>
-                        <input name="place" type="text" class="form-control" list="exPlacesList"
-                               inputmode="numeric" placeholder="Pick from list or type a new value"
-                               autocomplete="off" value="{{ .OneEx.Place }}">
-                        <datalist id="exPlacesList">
-                            {{ range .ExPlaces }}<option value="{{ . }}"></option>{{ end }}
-                        </datalist>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Name</td>
-                    <td><input name="name" type="text" class="form-control" value="{{ .OneEx.Name }}"></td>
-                </tr>
-                <tr>
-                    <td>Description</td>
-                    <td><textarea name="descr" rows="3" class="form-control" value="{{ .OneEx.Descr }}">{{ .OneEx.Descr }}</textarea></td>
-                </tr>
-                <tr>
-                    <td>Image link</td>
-                    <td><input name="image" type="text" class="form-control" value="{{ .OneEx.Image }}"></td>
-                </tr>
-                <tr>
-                    <td>YouTube link</td>
-                    <td><input name="video_url" type="text" class="form-control" placeholder="https://youtu.be/... or full watch URL" value="{{ .OneEx.VideoURL }}"></td>
-                </tr>
-                <tr class="ex-strength-only"{{ if eq .OneEx.Kind "cardio" }} style="display:none"{{ end }}>
-                    <td>Weight (default)</td>
-                    <td><input name="weight" type="number" step="any" min="0" class="form-control" value="{{ .OneEx.Weight }}"></td>
-                </tr>
-                <tr class="ex-strength-only"{{ if eq .OneEx.Kind "cardio" }} style="display:none"{{ end }}>
-                    <td>Reps (default)</td>
-                    <td><input name="reps" type="number" min="0" class="form-control" value="{{ .OneEx.Reps }}"></td>
-                </tr>
-                <tr class="ex-cardio-only"{{ if ne .OneEx.Kind "cardio" }} style="display:none"{{ end }}>
-                    <td colspan="2" class="text-muted small">
-                        Cardio exercises log distance and duration per session — no per-exercise defaults are kept.
-                    </td>
-                </tr>
-                <tr>
-                    <td><button type="submit" class="btn btn-primary">Save</button></td>
+                <div class="mb-2">
+                    <label class="form-label mb-1">Kind</label>
+                    <select name="kind" class="form-select" id="kindSelect" onchange="toggleKindRows(this.value)">
+                        <option value="strength" {{ if ne .OneEx.Kind "cardio" }}selected{{ end }}>Strength (weight × reps)</option>
+                        <option value="cardio"   {{ if eq .OneEx.Kind "cardio" }}selected{{ end }}>Cardio (distance + duration)</option>
+                    </select>
+                </div>
+                <div class="mb-2 ex-strength-only"{{ if eq .OneEx.Kind "cardio" }} style="display:none"{{ end }}>
+                    <label class="form-label mb-1">Mode</label>
+                    <select name="mode" class="form-select">
+                        <option value="reps"  {{ if ne .OneEx.Mode "timed" }}selected{{ end }}>Reps (weight × reps)</option>
+                        <option value="timed" {{ if eq .OneEx.Mode "timed" }}selected{{ end }}>Timed (duration only — plank, hold)</option>
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label mb-1">Group</label>
+                    <input name="group" type="text" class="form-control" list="exGroupsList"
+                           placeholder="Pick from list or type a new group"
+                           autocomplete="off" value="{{ .OneEx.Group }}">
+                    <datalist id="exGroupsList">
+                        {{ range .ExGroups }}<option value="{{ . }}"></option>{{ end }}
+                    </datalist>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label mb-1">Place in group</label>
+                    <input name="place" type="text" class="form-control" list="exPlacesList"
+                           inputmode="numeric" placeholder="Pick from list or type a new value"
+                           autocomplete="off" value="{{ .OneEx.Place }}">
+                    <datalist id="exPlacesList">
+                        {{ range .ExPlaces }}<option value="{{ . }}"></option>{{ end }}
+                    </datalist>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label mb-1">Name</label>
+                    <input name="name" type="text" class="form-control" value="{{ .OneEx.Name }}">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label mb-1">Description</label>
+                    <textarea name="descr" rows="3" class="form-control" value="{{ .OneEx.Descr }}">{{ .OneEx.Descr }}</textarea>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label mb-1">Image link</label>
+                    <input name="image" type="text" class="form-control" value="{{ .OneEx.Image }}">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label mb-1">YouTube link</label>
+                    <input name="video_url" type="text" class="form-control" placeholder="https://youtu.be/... or full watch URL" value="{{ .OneEx.VideoURL }}">
+                </div>
+                <div class="mb-2 ex-strength-only"{{ if eq .OneEx.Kind "cardio" }} style="display:none"{{ end }}>
+                    <label class="form-label mb-1">Weight (default)</label>
+                    <input name="weight" type="number" step="any" min="0" class="form-control" value="{{ .OneEx.Weight }}">
+                </div>
+                <div class="mb-2 ex-strength-only"{{ if eq .OneEx.Kind "cardio" }} style="display:none"{{ end }}>
+                    <label class="form-label mb-1">Reps (default)</label>
+                    <input name="reps" type="number" min="0" class="form-control" value="{{ .OneEx.Reps }}">
+                </div>
+                <div class="mb-2 ex-cardio-only text-muted small"{{ if ne .OneEx.Kind "cardio" }} style="display:none"{{ end }}>
+                    Cardio exercises log distance and duration per session — no per-exercise defaults are kept.
+                </div>
             </form>
-            <form action="/exdel/" method="post">
+            <form id="exDelForm" action="/exdel/" method="post">
                 <input name="id" type="hidden" value="{{ .OneEx.ID }}">
-                    <td>
-                        <button style="float: right;" type="submit" class="btn btn-danger">Delete</button>
-                    </td>
             </form>
-                </tr>
-        </table>
+            <div class="d-flex justify-content-between mt-2">
+                <button type="submit" form="exerciseForm" class="btn btn-primary">Save</button>
+                <button type="submit" form="exDelForm" class="btn btn-danger">Delete</button>
+            </div>
         </div>
         </div>
         </div>
-        <div class="col-md">
+        <div>
             {{ if .OneEx.Image }}
             <div class="card border-primary mb-3">
                 <div class="card-header">Image</div>
@@ -113,7 +99,6 @@
         </div>
     </div>
     </div>
-        
 
 <script>
 function toggleKindRows(kind) {
