@@ -35,7 +35,14 @@
    classes instead of Bootstrap rows/cols. Grids are single-column by
    default and gain columns via @container queries on the page container —
    i.e. based on actual available width, not viewport width. Browsers
-   without container-query support simply keep the single-column layout. */
+   without container-query support simply keep the single-column layout.
+
+   Split threshold is 900px (not the more obvious ~700px): two columns only
+   form once the page container is wide enough that each column still gets
+   ~440px+, which keeps things usable. Below 900px — including the Z Fold 7
+   inner screen (~800px viewport / ~776px container) and any phone —
+   everything stacks full-width instead of recreating the cramped
+   side-by-side layouts this container-query system exists to replace. */
 .page-cq {
     container-type: inline-size;
     container-name: page;
@@ -48,7 +55,7 @@
     margin-bottom: 1.5rem;
 }
 .grid-2 > *, .grid-8-4 > *, .grid-4-8 > *, .grid-cards > * { min-width: 0; }
-@container page (min-width: 700px) {
+@container page (min-width: 900px) {
     .grid-2   { grid-template-columns: 1fr 1fr; }
     .grid-8-4 { grid-template-columns: 2fr 1fr; }
     .grid-4-8 { grid-template-columns: 1fr 2fr; }
